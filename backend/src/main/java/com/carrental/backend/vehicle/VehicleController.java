@@ -8,6 +8,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/vehicles")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 public class VehicleController {
 
     private final VehicleService vehicleService;
