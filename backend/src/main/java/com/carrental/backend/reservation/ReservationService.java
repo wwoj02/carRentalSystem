@@ -22,11 +22,17 @@ public class ReservationService {
     public Reservation createReservation(ReservationRequest request) {
         User user = userRepository.findById(
                 request.getUserId()
-                ).orElseThrow();
+                ).orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found"
+        ));
 
         Vehicle vehicle = vehicleRepository.findById(
                 request.getVehicleId()
-        ).orElseThrow();
+                ).orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Vehicle not found"
+        ));
 
         if (!request.getEndDate().isAfter(request.getStartDate())) {
             throw new ResponseStatusException(
@@ -75,7 +81,10 @@ public class ReservationService {
 
     public Reservation cancelReservation(Integer id) {
         Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Reservation not found"
+                ));
 
         reservation.setStatus(ReservationStatus.CANCELLED);
 
