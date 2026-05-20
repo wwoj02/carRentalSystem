@@ -28,5 +28,7 @@ public class Reservation {
     private LocalDate startDate;
     private LocalDate endDate;
     private double totalPrice;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    private ReservationStatus status;
 }

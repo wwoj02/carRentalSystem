@@ -50,7 +50,7 @@ public class ReservationService {
         reservation.setEndDate(request.getEndDate());
 
         reservation.setTotalPrice(totalPrice);
-        reservation.setStatus("CONFIRMED");
+        reservation.setStatus(ReservationStatus.CONFIRMED);
 
         return reservationRepository.save(reservation);
     }
