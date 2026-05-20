@@ -20,4 +20,9 @@ public class ReservationController {
     public List<Reservation> getAllReservations() {
         return reservationService.getAllReservations();
     }
+
+    @PatchMapping("/{id}/cancel")
+    public Reservation cancelReservation(@PathVariable Integer id) {
+        return reservationService.cancelReservation(id);
+    }
 }

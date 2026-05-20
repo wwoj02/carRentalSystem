@@ -58,4 +58,13 @@ public class ReservationService {
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
     }
+
+    public Reservation cancelReservation(Integer id) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow();
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+
+        return reservationRepository.save(reservation);
+    }
 }
