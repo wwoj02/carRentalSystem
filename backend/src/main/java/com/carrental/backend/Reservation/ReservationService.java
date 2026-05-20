@@ -34,6 +34,20 @@ public class ReservationService {
             );
         }
 
+        boolean alreadyReserved = reservationRepository.existsOverlappingReservation(
+                vehicle.getId(),
+                request.getStartDate(),
+                request.getEndDate(),
+                ReservationStatus.CANCELLED
+        );
+
+        if (alreadyReserved) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Vehicle is already reserved in this period"
+            );
+        }
+
         long days = ChronoUnit.DAYS.between(
                 request.getStartDate(),
                 request.getEndDate()
