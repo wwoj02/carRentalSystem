@@ -1,4 +1,4 @@
-package com.carrental.backend.Reservation;
+package com.carrental.backend.reservation;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

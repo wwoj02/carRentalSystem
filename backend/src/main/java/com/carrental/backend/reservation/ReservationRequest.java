@@ -1,4 +1,4 @@
-package com.carrental.backend.Reservation;
+package com.carrental.backend.reservation;
 
 import lombok.Getter;
 import lombok.Setter;

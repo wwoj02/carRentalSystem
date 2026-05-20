@@ -1,4 +1,4 @@
-package com.carrental.backend.Reservation;
+package com.carrental.backend.reservation;
 
 import com.carrental.backend.user.User;
 import com.carrental.backend.user.UserRepository;
