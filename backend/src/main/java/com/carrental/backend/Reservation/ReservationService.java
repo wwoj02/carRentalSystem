@@ -67,4 +67,7 @@ public class ReservationService {
 
         return reservationRepository.save(reservation);
     }
+    public List<Reservation> getReservationByUser(Integer userId) {
+        return reservationRepository.findByUserId(userId);
+    }
 }

@@ -25,4 +25,9 @@ public class ReservationController {
     public Reservation cancelReservation(@PathVariable Integer id) {
         return reservationService.cancelReservation(id);
     }
+
+    @GetMapping("/user/{userId}")
+    public List<Reservation> getReservationByUser(@PathVariable Integer userId) {
+        return reservationService.getReservationByUser(userId);
+    }
 }
