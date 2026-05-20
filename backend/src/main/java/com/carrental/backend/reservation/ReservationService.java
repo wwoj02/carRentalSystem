@@ -86,10 +86,19 @@ public class ReservationService {
                         "Reservation not found"
                 ));
 
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "only confirmed reservations can be cancelled"
+            );
+        }
+
+
         reservation.setStatus(ReservationStatus.CANCELLED);
 
         return reservationRepository.save(reservation);
     }
+
     public List<Reservation> getReservationByUser(Integer userId) {
         return reservationRepository.findByUserId(userId);
     }
