@@ -5,7 +5,9 @@ import com.carrental.backend.user.UserRepository;
 import com.carrental.backend.vehicle.Vehicle;
 import com.carrental.backend.vehicle.VehicleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -19,12 +21,18 @@ public class ReservationService {
 
     public Reservation createReservation(ReservationRequest request) {
         User user = userRepository.findById(
-                request.getVehicleId()
+                request.getUserId()
                 ).orElseThrow();
 
         Vehicle vehicle = vehicleRepository.findById(
                 request.getVehicleId()
         ).orElseThrow();
+
+        if (!request.getEndDate().isAfter(request.getStartDate())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "End date must be after start date"
+            );
+        }
 
         long days = ChronoUnit.DAYS.between(
                 request.getStartDate(),
