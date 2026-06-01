@@ -13,8 +13,26 @@ public class VehicleController {
     private final VehicleService vehicleService;
 
     @GetMapping
-    public List<Vehicle> getAllVehicle() {
-        return vehicleService.getAllVehicles();
+    public List<Vehicle> getVehicles(
+        @RequestParam(required = false) String type,
+        @RequestParam(required = false) String brand,
+        @RequestParam(required = false) String model,
+        @RequestParam(required = false) String driveType,
+        @RequestParam(required = false) Double minPrice,
+        @RequestParam(required = false) Double maxPrice,
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "asc") String sortDirection
+    ) {
+        return vehicleService.getVehicles(
+                type,
+                brand,
+                model,
+                driveType,
+                minPrice,
+                maxPrice,
+                sortBy,
+                sortDirection
+        );
     }
 
     @GetMapping("/{id}")

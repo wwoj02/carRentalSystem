@@ -22,16 +22,16 @@ public class ReservationService {
     public Reservation createReservation(ReservationRequest request) {
         User user = userRepository.findById(
                 request.getUserId()
-                ).orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "User not found"
+        ).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "User not found"
         ));
 
         Vehicle vehicle = vehicleRepository.findById(
                 request.getVehicleId()
-                ).orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Vehicle not found"
+        ).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Vehicle not found"
         ));
 
         if (!request.getEndDate().isAfter(request.getStartDate())) {
@@ -44,7 +44,11 @@ public class ReservationService {
                 vehicle.getId(),
                 request.getStartDate(),
                 request.getEndDate(),
-                ReservationStatus.CANCELLED
+                List.of(
+                        ReservationStatus.PENDING_PAYMENT,
+                        ReservationStatus.CONFIRMED,
+                        ReservationStatus.ACTIVE
+                )
         );
 
         if (alreadyReserved) {
@@ -70,7 +74,7 @@ public class ReservationService {
         reservation.setEndDate(request.getEndDate());
 
         reservation.setTotalPrice(totalPrice);
-        reservation.setStatus(ReservationStatus.CONFIRMED);
+        reservation.setStatus(ReservationStatus.PENDING_PAYMENT);
 
         return reservationRepository.save(reservation);
     }
@@ -86,10 +90,11 @@ public class ReservationService {
                         "Reservation not found"
                 ));
 
-        if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED
+        && reservation.getStatus() != ReservationStatus.PENDING_PAYMENT) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "only confirmed reservations can be cancelled"
+                    "only confirmed/pending reservations can be cancelled"
             );
         }
 

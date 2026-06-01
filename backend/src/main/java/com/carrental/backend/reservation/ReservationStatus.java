@@ -1,8 +1,10 @@
 package com.carrental.backend.reservation;
 
 public enum ReservationStatus {
+    PENDING_PAYMENT,
     CONFIRMED,
-    CANCELLED,
     ACTIVE,
-    COMPLETED
+    COMPLETED,
+    CANCELLED,
+    PAYMENT_FAILED
 }
