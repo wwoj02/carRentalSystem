@@ -17,8 +17,11 @@ public class Vehicle {
 
     private String brand;
     private String model;
+
+    @Column(name = "production_year")
     private int year;
 
+    @Column(name = "vehicle_type")
     private String type;
     private String driveType;
 
