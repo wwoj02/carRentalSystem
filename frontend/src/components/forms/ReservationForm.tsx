@@ -1,19 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { Input, Button } from '../common/index';
-import type { CreateReservationRequest } from '../../types/Reservation';
 import { calculateDays, calculateTotalPrice, formatCurrency } from '../../utils/dateUtils';
 
 interface ReservationFormProps {
-  vehicleId: number;
   pricePerDay: number;
   vehicleBrand: string;
   vehicleModel: string;
-  onSubmit: (data: CreateReservationRequest) => Promise<void>;
+  onSubmit: (data: { startDate: string; endDate: string }) => Promise<void>;
   loading?: boolean;
 }
 
 export const ReservationForm: React.FC<ReservationFormProps> = ({
-  vehicleId,
   pricePerDay,
   vehicleBrand,
   vehicleModel,
@@ -21,7 +18,6 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   loading = false,
 }) => {
   const [formData, setFormData] = useState({
-    userId: '',
     startDate: '',
     endDate: '',
   });
@@ -47,9 +43,6 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.userId) {
-      newErrors.userId = 'User ID is required';
-    }
     if (!formData.startDate) {
       newErrors.startDate = 'Start date is required';
     }
@@ -78,8 +71,6 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
 
     try {
       await onSubmit({
-        userId: parseInt(formData.userId, 10),
-        vehicleId,
         startDate: formData.startDate,
         endDate: formData.endDate,
       });
@@ -91,16 +82,6 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h3 className="text-lg font-bold">Reserve {vehicleBrand} {vehicleModel}</h3>
-
-      <Input
-        label="User ID"
-        name="userId"
-        type="number"
-        value={formData.userId}
-        onChange={handleChange}
-        error={errors.userId}
-        placeholder="Enter your user ID"
-      />
 
       <Input
         label="Start Date"

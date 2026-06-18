@@ -7,6 +7,7 @@ import { ReservationForm } from '../components/forms/ReservationForm';
 import { Button } from '../components/common/Button';
 import { useAppStore } from '../store/appStore';
 import { formatCurrency } from '../utils/dateUtils';
+import { getApiErrorMessage } from '../services/api';
 import type { CreateReservationRequest } from '../types/Reservation';
 
 export const VehicleDetail: React.FC = () => {
@@ -35,8 +36,7 @@ export const VehicleDetail: React.FC = () => {
       showNotify('Reservation created successfully!', 'success');
       navigate('/bookings');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create reservation';
-      showNotify(message, 'error');
+      showNotify(getApiErrorMessage(error, 'Failed to create reservation'), 'error');
     } finally {
       setIsReserving(false);
     }
@@ -119,7 +119,6 @@ export const VehicleDetail: React.FC = () => {
             {vehicle.available ? (
               <CardBody>
                 <ReservationForm
-                  vehicleId={vehicle.id}
                   pricePerDay={vehicle.pricePerDay}
                   vehicleBrand={vehicle.brand}
                   vehicleModel={vehicle.model}

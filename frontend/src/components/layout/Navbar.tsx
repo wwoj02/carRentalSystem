@@ -36,9 +36,11 @@ export const Navbar: React.FC = () => {
               <Link to="/bookings" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-wider">
                 My Trips
               </Link>
-              <Link to="/admin" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-wider">
-                Admin
-              </Link>
+              {currentUser.role === 'ADMIN' && (
+                <Link to="/admin" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-wider">
+                  Admin
+                </Link>
+              )}
             </>
           )}
         </div>
@@ -51,7 +53,7 @@ export const Navbar: React.FC = () => {
                   {currentUser.firstName}
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
-                  Customer
+                  {currentUser.role === 'ADMIN' ? 'Admin' : 'Customer'}
                 </span>
               </div>
               <Button size="sm" variant="secondary" onClick={handleLogout} className="h-9 px-4">
@@ -59,11 +61,9 @@ export const Navbar: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <Link to="/login">
-              <Button size="md" className="h-11 px-6">
-                Sign In
-              </Button>
-            </Link>
+            <Button to="/login" size="md" className="h-11 px-6">
+              Sign In
+            </Button>
           )}
         </div>
       </div>

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '../components/common/index';
 
 export const Home: React.FC = () => {
@@ -25,19 +24,15 @@ export const Home: React.FC = () => {
               From luxury sedans to rugged SUVs, find the perfect vehicle for your next adventure with our seamless booking experience.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/vehicles">
-                <Button size="lg" className="w-full sm:w-auto h-14 text-lg">
-                  Browse Our Fleet
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </Button>
-              </Link>
-              <Link to="/booking-history">
-                <Button variant="secondary" size="lg" className="w-full sm:w-auto h-14 text-lg border-slate-700 bg-slate-800/50 text-white hover:bg-slate-800">
-                  Manage Bookings
-                </Button>
-              </Link>
+              <Button to="/vehicles" size="lg" className="w-full sm:w-auto h-14 text-lg">
+                Browse Our Fleet
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </Button>
+              <Button to="/bookings" variant="secondary" size="lg" className="w-full sm:w-auto h-14 text-lg border-slate-700 bg-slate-800/50 text-white hover:bg-slate-800">
+                Manage Bookings
+              </Button>
             </div>
           </div>
         </div>
@@ -87,11 +82,9 @@ export const Home: React.FC = () => {
             <div className="relative z-10">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to hit the road?</h2>
               <p className="text-indigo-100 text-xl mb-10 max-w-2xl mx-auto">Join thousands of happy travelers and experience the freedom of driving with CarRental.</p>
-              <Link to="/vehicles">
-                <Button size="lg" className="bg-white text-indigo-600 hover:bg-indigo-50 border-none h-14 text-lg px-10">
-                  Get Started Now
-                </Button>
-              </Link>
+              <Button to="/vehicles" size="lg" className="bg-white text-indigo-600 hover:bg-indigo-50 border-none h-14 text-lg px-10">
+                Get Started Now
+              </Button>
             </div>
           </div>
         </div>

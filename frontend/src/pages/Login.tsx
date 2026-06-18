@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/common/index';
 import { LoginForm } from '../components/forms/LoginForm';
+import { getApiErrorMessage } from '../services/api';
 import { userService } from '../services/userService';
 import { useAppStore } from '../store/appStore';
 import type { CreateUserRequest } from '../types/User';
@@ -15,12 +16,12 @@ export const Login: React.FC = () => {
     setLoading(true);
     try {
       const user = await userService.createUser(data);
+      userService.setCurrentUser(user);
       setCurrentUser(user);
       showNotify(`Welcome back, ${user.firstName}!`, 'success');
       navigate('/vehicles');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to authenticate';
-      showNotify(message, 'error');
+      showNotify(getApiErrorMessage(error, 'Failed to authenticate'), 'error');
     } finally {
       setLoading(false);
     }

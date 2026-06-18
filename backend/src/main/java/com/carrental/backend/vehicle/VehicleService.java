@@ -1,5 +1,6 @@
 package com.carrental.backend.vehicle;
 
+import com.carrental.backend.security.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -13,6 +14,7 @@ import java.util.Set;
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final AuthorizationService authorizationService;
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "id",
@@ -80,18 +82,24 @@ public class VehicleService {
 
     public Vehicle getVehicle(Integer id) {
         return vehicleRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND,
+                        "Vehicle not found"
+                ));
     }
 
     public Vehicle createVehicle(Vehicle vehicle) {
+        authorizationService.requireAdmin();
         return vehicleRepository.save(vehicle);
     }
 
     public void deleteVehicle(Integer id) {
+        authorizationService.requireAdmin();
         vehicleRepository.deleteById(id);
     }
 
     public Vehicle updateVehicle(Integer id, Vehicle updatedVehicle) {
+        authorizationService.requireAdmin();
         Vehicle vehicle = vehicleRepository.findById(id).orElseThrow();
 
         vehicle.setBrand(updatedVehicle.getBrand());

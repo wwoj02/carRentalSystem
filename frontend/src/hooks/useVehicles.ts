@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Vehicle, VehicleFilter } from '../types/Vehicle';
 import { vehicleService } from '../services/vehicleService';
+import { getApiErrorMessage } from '../services/api';
 
 export const useVehicles = (filters?: VehicleFilter) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -15,7 +16,7 @@ export const useVehicles = (filters?: VehicleFilter) => {
         const data = await vehicleService.getVehicles(filters);
         setVehicles(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch vehicles');
+        setError(getApiErrorMessage(err, 'Failed to fetch vehicles'));
       } finally {
         setLoading(false);
       }
@@ -40,7 +41,7 @@ export const useVehicle = (id: number) => {
         const data = await vehicleService.getVehicle(id);
         setVehicle(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch vehicle');
+        setError(getApiErrorMessage(err, 'Failed to fetch vehicle'));
       } finally {
         setLoading(false);
       }

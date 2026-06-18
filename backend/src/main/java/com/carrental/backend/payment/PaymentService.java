@@ -1,11 +1,13 @@
 package com.carrental.backend.payment;
 
+import com.carrental.backend.security.AuthorizationService;
 import com.carrental.backend.reservation.Reservation;
 import com.carrental.backend.reservation.ReservationRepository;
 import com.carrental.backend.reservation.ReservationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -16,7 +18,9 @@ import java.util.UUID;
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
+    private final AuthorizationService authorizationService;
 
+    @Transactional
     public PaymentResponse createPayment(Integer reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -29,6 +33,8 @@ public class PaymentService {
                     "Payment can only be created for pending reservations"
             );
         }
+
+        authorizationService.requireSelfOrAdmin(reservation.getUser().getId());
 
         paymentRepository.findByReservationId(reservationId)
                 .ifPresent(payment -> {
@@ -54,6 +60,7 @@ public class PaymentService {
         return toResponse(savedPayment);
     }
 
+    @Transactional
     public PaymentResponse confirmPayment(String providerTransactionId) {
         Payment payment = paymentRepository.findByProviderTransactionId(providerTransactionId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -68,6 +75,8 @@ public class PaymentService {
             );
         }
 
+        authorizationService.requireSelfOrAdmin(payment.getReservation().getUser().getId());
+
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaidAt(LocalDateTime.now());
 
@@ -80,6 +89,7 @@ public class PaymentService {
         return toResponse(savedPayment);
     }
 
+    @Transactional
     public PaymentResponse failPayment(String providerTransactionId) {
         Payment payment = paymentRepository.findByProviderTransactionId(providerTransactionId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -93,6 +103,8 @@ public class PaymentService {
                     "Only pending payments can be failed"
             );
         }
+
+        authorizationService.requireSelfOrAdmin(payment.getReservation().getUser().getId());
 
         payment.setStatus(PaymentStatus.FAILED);
 

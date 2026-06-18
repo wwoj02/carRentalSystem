@@ -4,6 +4,7 @@ import { useVehicles } from '../hooks/useVehicles';
 import { useReservations } from '../hooks/useReservations';
 import { vehicleService } from '../services/vehicleService';
 import { userService } from '../services/userService';
+import { getApiErrorMessage } from '../services/api';
 import { useAppStore } from '../store/appStore';
 import { formatDate, formatCurrency } from '../utils/dateUtils';
 import { RESERVATION_STATUS_LABELS } from '../utils/constants';
@@ -37,7 +38,7 @@ export const AdminPanel: React.FC = () => {
         const data = await userService.getUsers();
         setAllUsers(data);
       } catch (error) {
-        console.error('Error loading users:', error);
+        console.error('Error loading users:', getApiErrorMessage(error, 'Failed to load users'));
       } finally {
         setUsersLoading(false);
       }
@@ -109,6 +110,18 @@ export const AdminPanel: React.FC = () => {
         <Card>
           <CardBody className="text-center py-12">
             <p className="text-gray-600 text-lg">Please login to access the admin panel</p>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
+  if (currentUser.role !== 'ADMIN') {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardBody className="text-center py-12">
+            <p className="text-gray-600 text-lg">Admin access required</p>
           </CardBody>
         </Card>
       </div>

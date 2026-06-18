@@ -5,13 +5,16 @@ import { useReservations } from '../hooks/useReservations';
 import { Card, CardBody, Badge, Button, Spinner } from '../components/common/index';
 import { formatDate, formatCurrency } from '../utils/dateUtils';
 import { RESERVATION_STATUS_LABELS } from '../utils/constants';
+import { getApiErrorMessage } from '../services/api';
+import { paymentService } from '../services/paymentService';
 import { Modal } from '../components/common/Modal';
 
 export const BookingHistory: React.FC = () => {
-  const { currentUser } = useAppStore();
-  const { reservations, loading, error, cancelReservation } = useReservations(currentUser?.id);
+  const { currentUser, showNotify } = useAppStore();
+  const { reservations, loading, error, cancelReservation, refetch } = useReservations(currentUser?.id);
   const [cancelingId, setCancelingId] = useState<number | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [payingId, setPayingId] = useState<number | null>(null);
 
   const handleCancelClick = (id: number) => {
     setCancelingId(id);
@@ -24,9 +27,24 @@ export const BookingHistory: React.FC = () => {
         await cancelReservation(cancelingId);
         setShowCancelModal(false);
         setCancelingId(null);
+        showNotify('Reservation cancelled', 'success');
       } catch (error) {
-        console.error('Error canceling reservation:', error);
+        showNotify(getApiErrorMessage(error, 'Failed to cancel reservation'), 'error');
       }
+    }
+  };
+
+  const handlePay = async (reservationId: number) => {
+    setPayingId(reservationId);
+    try {
+      const payment = await paymentService.createPayment(reservationId);
+      await paymentService.confirmPayment(payment.providerTransactionId);
+      showNotify('Payment confirmed successfully', 'success');
+      await refetch();
+    } catch (error) {
+      showNotify(getApiErrorMessage(error, 'Payment failed'), 'error');
+    } finally {
+      setPayingId(null);
     }
   };
 
@@ -36,9 +54,7 @@ export const BookingHistory: React.FC = () => {
         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-3xl mb-6">🔒</div>
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h2>
         <p className="text-slate-500 mb-8 max-w-sm">Please sign in to your account to view and manage your booking history.</p>
-        <Link to="/login">
-          <Button size="lg">Sign In Now</Button>
-        </Link>
+        <Button to="/login" size="lg">Sign In Now</Button>
       </div>
     );
   }
@@ -51,11 +67,9 @@ export const BookingHistory: React.FC = () => {
             <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">My Bookings</h1>
             <p className="text-slate-500">Manage your current and past car rental reservations.</p>
           </div>
-          <Link to="/vehicles">
-            <Button variant="secondary" size="md">
-              Rent Another Car
-            </Button>
-          </Link>
+          <Button to="/vehicles" variant="secondary" size="md">
+            Rent Another Car
+          </Button>
         </header>
 
         {error && (
@@ -75,9 +89,7 @@ export const BookingHistory: React.FC = () => {
               <div className="text-5xl mb-6">🚗</div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">No bookings found</h3>
               <p className="text-slate-500 max-w-xs mx-auto">You haven't made any reservations yet. Explore our fleet and find your perfect ride!</p>
-              <Link to="/vehicles">
-                <Button className="mt-8">Browse Vehicles</Button>
-              </Link>
+              <Button to="/vehicles" className="mt-8">Browse Vehicles</Button>
             </CardBody>
           </Card>
         ) : (
@@ -145,6 +157,17 @@ export const BookingHistory: React.FC = () => {
                           }
                         />
                       </div>
+
+                      {reservation.status === 'PENDING_PAYMENT' && (
+                        <Button
+                          size="sm"
+                          onClick={() => handlePay(reservation.id)}
+                          loading={payingId === reservation.id}
+                          className="h-9 px-4 text-xs"
+                        >
+                          Pay Now
+                        </Button>
+                      )}
 
                       {['PENDING_PAYMENT', 'CONFIRMED', 'ACTIVE'].includes(reservation.status) && (
                         <Button

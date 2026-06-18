@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const VEHICLE_TYPES = ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Van', 'Truck'];
 export const DRIVE_TYPES = ['FWD', 'RWD', 'AWD'];
