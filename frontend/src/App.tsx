@@ -1,51 +1,44 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Navbar } from './components/layout/Navbar';
-import { Footer } from './components/layout/Footer';
-import { Toast } from './components/common/Toast';
-import { Home } from './pages/Home';
-import { Login } from './pages/Login';
-import { VehicleList } from './pages/VehicleList';
-import { VehicleDetail } from './pages/VehicleDetail';
-import { BookingHistory } from './pages/BookingHistory';
-import { AdminPanel } from './pages/AdminPanel';
-import { NotFound } from './pages/NotFound';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { MantineProvider } from '@mantine/core';
+import { theme } from './theme';
 import { useAppStore } from './store/appStore';
 import { userService } from './services/userService';
-import { useEffect } from 'react';
+import { Navbar } from './components/layout/Navbar';
+import { Toast } from './components/common';
+import { Home } from './pages/Home';
+import { Auth } from './pages/Auth';
+import { Reservation } from './pages/Reservation';
+import { Dashboard } from './pages/Dashboard';
 
 function App() {
   const { setCurrentUser } = useAppStore();
 
   useEffect(() => {
-    // Load user from localStorage on mount
+    // Restore the "logged-in" user from localStorage on mount.
     const loadUser = async () => {
       const user = await userService.getCurrentUser();
-      if (user) {
-        setCurrentUser(user);
-      }
+      if (user) setCurrentUser(user);
     };
     loadUser();
   }, [setCurrentUser]);
 
   return (
-    <Router>
-      <div id="root">
+    <MantineProvider theme={theme}>
+      <BrowserRouter>
         <Navbar />
-        <main className="flex-1">
+        <main>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/vehicles" element={<VehicleList />} />
-            <Route path="/vehicles/:id" element={<VehicleDetail />} />
-            <Route path="/bookings" element={<BookingHistory />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reserve/:vehicleId" element={<Reservation />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
-        <Footer />
         <Toast />
-      </div>
-    </Router>
+      </BrowserRouter>
+    </MantineProvider>
   );
 }
 

@@ -1,35 +1,33 @@
-import React from 'react';
+import type { ReactNode } from 'react';
+import { Modal as MantineModal, Divider, Box } from '@mantine/core';
 
 interface ModalProps {
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
+  title?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg';
 }
 
-const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-};
+const sizeMap = { sm: 'md', md: 'lg', lg: 'xl' } as const;
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer, size = 'md' }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full mx-4`}>
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">
-            ×
-          </button>
-        </div>
-        <div className="p-6">{children}</div>
-        {footer && <div className="p-6 border-t flex gap-3 justify-end">{footer}</div>}
-      </div>
-    </div>
-  );
-};
+export const Modal = ({ open, onClose, title, children, footer, size = 'md' }: ModalProps) => (
+  <MantineModal
+    opened={open}
+    onClose={onClose}
+    title={title}
+    size={sizeMap[size]}
+    centered
+    radius="lg"
+    overlayProps={{ backgroundOpacity: 0.6, blur: 3 }}
+  >
+    {children}
+    {footer && (
+      <>
+        <Divider my="md" />
+        <Box>{footer}</Box>
+      </>
+    )}
+  </MantineModal>
+);

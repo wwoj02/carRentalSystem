@@ -1,29 +1,26 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import { Notification, Box } from '@mantine/core';
 import { useAppStore } from '../../store/appStore';
 
-export const Toast: React.FC = () => {
+const colorMap = { success: 'green', error: 'red', info: 'gray' } as const;
+
+// Global toast notification, driven by the app store (no native alert()).
+export const Toast = () => {
   const { showNotification, notificationMessage, notificationType, hideNotify } = useAppStore();
 
   useEffect(() => {
-    if (showNotification) {
-      const timer = setTimeout(hideNotify, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showNotification, hideNotify]);
+    if (!showNotification) return;
+    const t = setTimeout(hideNotify, 4000);
+    return () => clearTimeout(t);
+  }, [showNotification, notificationMessage, hideNotify]);
 
   if (!showNotification) return null;
 
-  const typeClasses = {
-    success: 'bg-green-500 text-white',
-    error: 'bg-red-500 text-white',
-    info: 'bg-blue-500 text-white',
-  };
-
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-fade-in">
-      <div className={`px-6 py-3 rounded-lg shadow-lg ${typeClasses[notificationType]}`}>
+    <Box style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000, maxWidth: 360 }}>
+      <Notification color={colorMap[notificationType]} onClose={hideNotify} withBorder>
         {notificationMessage}
-      </div>
-    </div>
+      </Notification>
+    </Box>
   );
 };

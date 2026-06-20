@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mantine/core": "^9.3.2",
+    "@mantine/hooks": "^9.3.2",
+    "@mantine/notifications": "^9.3.2",
     "axios": "^1.18.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",

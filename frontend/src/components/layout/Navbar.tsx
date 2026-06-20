@@ -1,72 +1,69 @@
-import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Group, Container, Avatar, Text, UnstyledButton, ThemeIcon } from '@mantine/core';
 import { useAppStore } from '../../store/appStore';
-import { Button } from '../common/Button';
+import { userService } from '../../services/userService';
+import { Button } from '../common';
 
-export const Navbar: React.FC = () => {
-  const { currentUser, setCurrentUser } = useAppStore();
+export const Navbar = () => {
   const navigate = useNavigate();
+  const { currentUser, setCurrentUser, showNotify } = useAppStore();
 
   const handleLogout = () => {
+    userService.clearCurrentUser();
     setCurrentUser(null);
-    localStorage.removeItem('user');
+    showNotify('You have been logged out', 'info');
     navigate('/');
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-      <div className="container mx-auto px-6 h-20 flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-2 group">
-          <span className="text-3xl group-hover:rotate-12 transition-transform duration-300">🚗</span>
-          <span className="text-xl font-black text-slate-900 tracking-tight">
-            CAR<span className="text-indigo-600">RENTAL</span>
-          </span>
-        </Link>
-
-        <div className="hidden md:flex gap-8 items-center">
-          <Link to="/" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-wider">
-            Home
+    <header
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+        borderBottom: '1px solid var(--mantine-color-gray-2)',
+        background: 'rgba(255,255,255,0.9)',
+        backdropFilter: 'blur(8px)',
+      }}
+    >
+      <Container size="xl" py="sm">
+        <Group justify="space-between">
+          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Group gap="xs">
+              <ThemeIcon color="dark" radius="md" size="lg">
+                R
+              </ThemeIcon>
+              <Text fw={700} size="lg" c="dark">
+                Rent-A-Car
+              </Text>
+            </Group>
           </Link>
-          <Link to="/vehicles" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-wider">
-            Fleet
-          </Link>
 
-          {currentUser && (
-            <>
-              <Link to="/bookings" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-wider">
-                My Trips
-              </Link>
-              <Link to="/admin" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-wider">
-                Admin
-              </Link>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-4">
-          {currentUser ? (
-            <div className="flex items-center gap-4 pl-4 border-l border-slate-100">
-              <div className="flex flex-col items-end">
-                <span className="text-sm font-bold text-slate-900 leading-none">
-                  {currentUser.firstName}
-                </span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
-                  Customer
-                </span>
-              </div>
-              <Button size="sm" variant="secondary" onClick={handleLogout} className="h-9 px-4">
-                Sign Out
+          <Group gap="sm">
+            {currentUser ? (
+              <>
+                <UnstyledButton onClick={() => navigate('/dashboard')} title="Go to dashboard">
+                  <Group gap="xs">
+                    <Avatar color="gray" radius="xl" size="md">
+                      {currentUser.firstName?.[0]?.toUpperCase()}
+                    </Avatar>
+                    <Text size="sm" fw={500} visibleFrom="sm">
+                      {currentUser.firstName}
+                    </Text>
+                  </Group>
+                </UnstyledButton>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button variant="primary" size="sm" onClick={() => navigate('/auth')}>
+                Log in
               </Button>
-            </div>
-          ) : (
-            <Link to="/login">
-              <Button size="md" className="h-11 px-6">
-                Sign In
-              </Button>
-            </Link>
-          )}
-        </div>
-      </div>
-    </nav>
+            )}
+          </Group>
+        </Group>
+      </Container>
+    </header>
   );
 };
