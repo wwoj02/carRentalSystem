@@ -21,4 +21,11 @@ export const reservationService = {
     const { data } = await api.patch<Reservation>(`/reservations/${id}/cancel`);
     return data;
   },
+
+  async downloadAgreement(id: number): Promise<Blob> {
+    const { data } = await api.get<Blob>(`/reservations/${id}/agreement`, {
+      responseType: 'blob',
+    });
+    return data;
+  },
 };

@@ -117,6 +117,13 @@ export const Reservation = () => {
         vehicleId: vehicle.id,
         startDate,
         endDate,
+        customerName: details.name,
+        customerEmail: details.email,
+        customerPhone: details.phone,
+        drivingLicenceId: details.licence,
+        insuranceType: insurance,
+        gpsIncluded: gps,
+        youngDriver,
       });
       setReservationId(reservation.id);
       // Immediately initialize the payment to obtain a providerTransactionId.

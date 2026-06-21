@@ -36,6 +36,7 @@ export const Dashboard = () => {
   const [tab, setTab] = useState<Tab>('active');
   const [cancelTarget, setCancelTarget] = useState<Reservation | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   useEffect(() => {
     // When not logged in we render the prompt below, so no fetch is needed.
@@ -79,6 +80,25 @@ export const Dashboard = () => {
       showNotify('Could not cancel the reservation.', 'error');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const downloadAgreement = async (reservation: Reservation) => {
+    setDownloadingId(reservation.id);
+    try {
+      const blob = await reservationService.downloadAgreement(reservation.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `rental-agreement-${reservation.id}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      showNotify('Could not download the rental agreement.', 'error');
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -135,6 +155,14 @@ export const Dashboard = () => {
                 <Badge color={STATUS_COLOR[r.status] ?? 'gray'}>
                   {RESERVATION_STATUS_LABELS[r.status] ?? r.status}
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={downloadingId === r.id}
+                  onClick={() => downloadAgreement(r)}
+                >
+                  Agreement
+                </Button>
                 {isActive && (
                   <Button variant="danger" size="sm" onClick={() => setCancelTarget(r)}>
                     Cancel booking

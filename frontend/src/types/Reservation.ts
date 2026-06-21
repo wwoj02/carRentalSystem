@@ -16,6 +16,13 @@ export type Reservation = {
   startDate: string;
   endDate: string;
   totalPrice: number;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  drivingLicenceId?: string;
+  insuranceType?: 'none' | 'regular' | 'premium';
+  gpsIncluded: boolean;
+  youngDriver: boolean;
   status: ReservationStatusType;
 };
 
@@ -24,4 +31,11 @@ export type CreateReservationRequest = {
   vehicleId: number;
   startDate: string;
   endDate: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  drivingLicenceId: string;
+  insuranceType: 'none' | 'regular' | 'premium';
+  gpsIncluded: boolean;
+  youngDriver: boolean;
 };

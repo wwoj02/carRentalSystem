@@ -28,6 +28,13 @@ public class Reservation {
     private LocalDate startDate;
     private LocalDate endDate;
     private double totalPrice;
+    private String customerName;
+    private String customerEmail;
+    private String customerPhone;
+    private String drivingLicenceId;
+    private String insuranceType;
+    private boolean gpsIncluded;
+    private boolean youngDriver;
 
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
