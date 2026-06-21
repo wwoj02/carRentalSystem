@@ -3,6 +3,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  role: 'CUSTOMER' | 'EMPLOYEE' | 'ADMIN';
 }
 
 export interface CreateUserRequest {
@@ -18,4 +19,9 @@ export interface RegisterRequest extends CreateUserRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
 }

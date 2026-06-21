@@ -1,5 +1,5 @@
 import api from './api';
-import type { User, CreateUserRequest, LoginRequest, RegisterRequest } from '../types/User';
+import type { User, CreateUserRequest, LoginRequest, RegisterRequest, AuthResponse } from '../types/User';
 
 export const userService = {
   async getUsers(): Promise<User[]> {
@@ -13,15 +13,15 @@ export const userService = {
   },
 
   async register(request: RegisterRequest): Promise<User> {
-    const { data } = await api.post<User>('/auth/register', request);
-    this.setCurrentUser(data);
-    return data;
+    const { data } = await api.post<AuthResponse>('/auth/register', request);
+    this.setSession(data);
+    return data.user;
   },
 
   async login(request: LoginRequest): Promise<User> {
-    const { data } = await api.post<User>('/auth/login', request);
-    this.setCurrentUser(data);
-    return data;
+    const { data } = await api.post<AuthResponse>('/auth/login', request);
+    this.setSession(data);
+    return data.user;
   },
 
   async getCurrentUser(): Promise<User | null> {
@@ -34,7 +34,13 @@ export const userService = {
     localStorage.setItem('user', JSON.stringify(user));
   },
 
+  setSession(auth: AuthResponse): void {
+    localStorage.setItem('user', JSON.stringify(auth.user));
+    localStorage.setItem('token', auth.token);
+  },
+
   clearCurrentUser(): void {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   },
 };

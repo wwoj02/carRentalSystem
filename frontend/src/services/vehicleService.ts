@@ -22,7 +22,7 @@ export const vehicleService = {
     return data;
   },
 
-  async createVehicle(vehicle: Vehicle): Promise<Vehicle> {
+  async createVehicle(vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> {
     const { data } = await api.post<Vehicle>('/vehicles', vehicle);
     return data;
   },

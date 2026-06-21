@@ -40,9 +40,11 @@ export const Navbar = () => {
           </Link>
 
           <Group gap="sm">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/staff')}>
-              Staff
-            </Button>
+            {(currentUser?.role === 'EMPLOYEE' || currentUser?.role === 'ADMIN') && (
+              <Button variant="ghost" size="sm" onClick={() => navigate('/staff')}>
+                Staff
+              </Button>
+            )}
             {currentUser ? (
               <>
                 <UnstyledButton onClick={() => navigate('/dashboard')} title="Go to dashboard">
