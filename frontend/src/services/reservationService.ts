@@ -22,6 +22,16 @@ export const reservationService = {
     return data;
   },
 
+  async processPickup(id: number): Promise<Reservation> {
+    const { data } = await api.patch<Reservation>(`/reservations/${id}/pickup`);
+    return data;
+  },
+
+  async processReturn(id: number, returnNotes: string): Promise<Reservation> {
+    const { data } = await api.patch<Reservation>(`/reservations/${id}/return`, { returnNotes });
+    return data;
+  },
+
   async downloadAgreement(id: number): Promise<Blob> {
     const { data } = await api.get<Blob>(`/reservations/${id}/agreement`, {
       responseType: 'blob',

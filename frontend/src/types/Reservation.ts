@@ -23,6 +23,7 @@ export type Reservation = {
   insuranceType?: 'none' | 'regular' | 'premium';
   gpsIncluded: boolean;
   youngDriver: boolean;
+  returnNotes?: string;
   status: ReservationStatusType;
 };
 

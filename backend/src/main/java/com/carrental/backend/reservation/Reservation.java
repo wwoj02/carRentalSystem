@@ -36,6 +36,9 @@ public class Reservation {
     private boolean gpsIncluded;
     private boolean youngDriver;
 
+    @Column(length = 1000)
+    private String returnNotes;
+
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 }

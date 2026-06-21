@@ -124,6 +124,45 @@ public class ReservationService {
         return reservationRepository.findByUserId(userId);
     }
 
+    public Reservation processPickup(Integer id) {
+        Reservation reservation = getReservation(id);
+
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Only confirmed reservations can be picked up"
+            );
+        }
+
+        reservation.setStatus(ReservationStatus.ACTIVE);
+        reservation.getVehicle().setAvailable(false);
+        vehicleRepository.save(reservation.getVehicle());
+
+        return reservationRepository.save(reservation);
+    }
+
+    public Reservation processReturn(Integer id, ReturnRequest request) {
+        Reservation reservation = getReservation(id);
+
+        if (reservation.getStatus() != ReservationStatus.ACTIVE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Only active reservations can be returned"
+            );
+        }
+
+        reservation.setStatus(ReservationStatus.COMPLETED);
+        reservation.setReturnNotes(
+                request == null || request.getReturnNotes() == null
+                        ? null
+                        : request.getReturnNotes().trim()
+        );
+        reservation.getVehicle().setAvailable(true);
+        vehicleRepository.save(reservation.getVehicle());
+
+        return reservationRepository.save(reservation);
+    }
+
     public Reservation getReservation(Integer id) {
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -161,6 +200,9 @@ public class ReservationService {
                 GPS navigation: %s
                 Young driver: %s
 
+                Return notes:
+                %s
+
                 Total price: %.2f PLN
 
                 This agreement was generated automatically after reservation confirmation.
@@ -181,6 +223,7 @@ public class ReservationService {
                 blankToDash(reservation.getInsuranceType()),
                 yesNo(reservation.isGpsIncluded()),
                 yesNo(reservation.isYoungDriver()),
+                blankToDash(reservation.getReturnNotes()),
                 reservation.getTotalPrice()
         );
     }

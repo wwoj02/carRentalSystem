@@ -10,6 +10,7 @@ import { Home } from './pages/Home';
 import { Auth } from './pages/Auth';
 import { Reservation } from './pages/Reservation';
 import { Dashboard } from './pages/Dashboard';
+import { StaffPanel } from './pages/StaffPanel';
 
 function App() {
   const { setCurrentUser } = useAppStore();
@@ -33,6 +34,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/reserve/:vehicleId" element={<Reservation />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/staff" element={<StaffPanel />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

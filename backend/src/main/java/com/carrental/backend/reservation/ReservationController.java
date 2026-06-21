@@ -30,6 +30,19 @@ public class ReservationController {
         return reservationService.cancelReservation(id);
     }
 
+    @PatchMapping("/{id}/pickup")
+    public Reservation processPickup(@PathVariable Integer id) {
+        return reservationService.processPickup(id);
+    }
+
+    @PatchMapping("/{id}/return")
+    public Reservation processReturn(
+            @PathVariable Integer id,
+            @RequestBody(required = false) ReturnRequest request
+    ) {
+        return reservationService.processReturn(id, request);
+    }
+
     @GetMapping("/user/{userId}")
     public List<Reservation> getReservationByUser(@PathVariable Integer userId) {
         return reservationService.getReservationByUser(userId);
