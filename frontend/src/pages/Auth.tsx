@@ -10,21 +10,30 @@ type Tab = 'login' | 'register';
 
 export const Auth = () => {
   const navigate = useNavigate();
-  const { createUser, loading } = useUser();
+  const { register, login, loading } = useUser();
   const { setCurrentUser, showNotify } = useAppStore();
   const [tab, setTab] = useState<Tab>('login');
 
-  // login form (mock)
-  const [loginEmail, setLoginEmail] = useState('');
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
 
-  // register form
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleLogin = (e: FormEvent) => {
+  const getErrorMessage = (err: unknown, fallback: string) => {
+    const maybeAxios = err as { response?: { data?: { message?: string } } };
+    return maybeAxios.response?.data?.message ?? fallback;
+  };
+
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    // No actual login endpoint exists, per the API contract.
-    showNotify('No login endpoint available', 'info');
+    try {
+      const user = await login(loginForm);
+      setCurrentUser(user);
+      showNotify(`Welcome back, ${user.firstName}!`, 'success');
+      navigate('/dashboard');
+    } catch (err) {
+      showNotify(getErrorMessage(err, 'Invalid email or password.'), 'error');
+    }
   };
 
   const validate = () => {
@@ -32,6 +41,7 @@ export const Auth = () => {
     if (!form.firstName.trim()) next.firstName = 'First name is required';
     if (!form.lastName.trim()) next.lastName = 'Last name is required';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = 'A valid email is required';
+    if (form.password.length < 6) next.password = 'Password must have at least 6 characters';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -40,12 +50,12 @@ export const Auth = () => {
     e.preventDefault();
     if (!validate()) return;
     try {
-      const user = await createUser(form);
+      const user = await register(form);
       setCurrentUser(user);
       showNotify(`Welcome, ${user.firstName}! Your account is ready.`, 'success');
       navigate('/');
-    } catch {
-      showNotify('Registration failed. Please try again.', 'error');
+    } catch (err) {
+      showNotify(getErrorMessage(err, 'Registration failed. Please try again.'), 'error');
     }
   };
 
@@ -73,16 +83,18 @@ export const Auth = () => {
                     label="Email"
                     type="email"
                     placeholder="you@example.com"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.currentTarget.value)}
+                    value={loginForm.email}
+                    onChange={(e) => setLoginForm({ ...loginForm, email: e.currentTarget.value })}
                   />
-                  <PasswordInput label="Password" placeholder="••••••••" />
-                  <Button type="submit" size="lg" fullWidth>
+                  <PasswordInput
+                    label="Password"
+                    placeholder="Password"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm({ ...loginForm, password: e.currentTarget.value })}
+                  />
+                  <Button type="submit" size="lg" fullWidth loading={loading}>
                     Log In
                   </Button>
-                  <Text ta="center" size="xs" c="dimmed">
-                    Demo only — no login endpoint is available.
-                  </Text>
                 </Stack>
               </form>
             </Tabs.Panel>
@@ -108,6 +120,12 @@ export const Auth = () => {
                     value={form.email}
                     error={errors.email}
                     onChange={(e) => setForm({ ...form, email: e.currentTarget.value })}
+                  />
+                  <PasswordInput
+                    label="Password"
+                    value={form.password}
+                    error={errors.password}
+                    onChange={(e) => setForm({ ...form, password: e.currentTarget.value })}
                   />
                   <Button type="submit" size="lg" fullWidth loading={loading}>
                     Create account

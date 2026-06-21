@@ -10,3 +10,12 @@ export interface CreateUserRequest {
   lastName: string;
   email: string;
 }
+
+export interface RegisterRequest extends CreateUserRequest {
+  password: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
