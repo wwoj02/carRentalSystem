@@ -4,9 +4,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -16,17 +18,32 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
+    private final TokenAuthenticationFilter tokenAuthenticationFilter;
+
+    public SecurityConfig(TokenAuthenticationFilter tokenAuthenticationFilter) {
+        this.tokenAuthenticationFilter = tokenAuthenticationFilter;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-                // .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                );
+                        .requestMatchers("/api/auth/**", "/h2-console/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/vehicles/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/vehicles").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/vehicles/**").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/vehicles/**").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reservations").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .requestMatchers("/api/reservations/*/pickup", "/api/reservations/*/return").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

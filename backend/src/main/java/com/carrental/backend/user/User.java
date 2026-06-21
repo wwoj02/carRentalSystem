@@ -23,4 +23,7 @@ public class User {
 
     @JsonIgnore
     private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    private UserRole role = UserRole.CUSTOMER;
 }

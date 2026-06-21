@@ -1,5 +1,6 @@
 package com.carrental.backend.user;
 
+import com.carrental.backend.security.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,8 +12,9 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenService tokenService;
 
-    public UserResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         String email = request.email().trim().toLowerCase();
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
@@ -27,11 +29,13 @@ public class AuthService {
         user.setLastName(request.lastName().trim());
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setRole(UserRole.CUSTOMER);
 
-        return UserResponse.from(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        return new AuthResponse(UserResponse.from(savedUser), tokenService.createToken(savedUser));
     }
 
-    public UserResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmailIgnoreCase(request.email().trim())
                 .orElseThrow(() -> invalidCredentials());
 
@@ -40,7 +44,7 @@ public class AuthService {
             throw invalidCredentials();
         }
 
-        return UserResponse.from(user);
+        return new AuthResponse(UserResponse.from(user), tokenService.createToken(user));
     }
 
     private ResponseStatusException invalidCredentials() {
