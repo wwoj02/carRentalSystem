@@ -45,9 +45,6 @@ export const VehicleDetailsModal = ({ vehicleId, onClose, onReserve }: VehicleDe
             <Badge color="gray" variant="light" radius="xl">{vehicle.year}</Badge>
             <Badge color="gray" variant="light" radius="xl">{vehicle.type}</Badge>
             <Badge color="gray" variant="light" radius="xl">{vehicle.driveType}</Badge>
-            <Badge color={vehicle.available ? 'green' : 'red'} variant="light" radius="xl">
-              {vehicle.available ? 'Available' : 'Unavailable'}
-            </Badge>
           </Group>
 
           <Text size="sm" c="dimmed">
@@ -66,7 +63,7 @@ export const VehicleDetailsModal = ({ vehicleId, onClose, onReserve }: VehicleDe
                 $ {vehicle.pricePerDay}
               </Text>
             </Group>
-            <Button variant="pill" size="lg" disabled={!vehicle.available} onClick={() => onReserve(vehicle)}>
+            <Button variant="pill" size="lg" onClick={() => onReserve(vehicle)}>
               reserve now
             </Button>
           </Group>

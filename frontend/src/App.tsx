@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import { theme } from './theme';
 import { useAppStore } from './store/appStore';
 import { userService } from './services/userService';
+import type { User } from './types/User';
 import { Navbar } from './components/layout/Navbar';
 import { Toast } from './components/common';
 import { Home } from './pages/Home';
@@ -11,6 +12,26 @@ import { Auth } from './pages/Auth';
 import { Reservation } from './pages/Reservation';
 import { Dashboard } from './pages/Dashboard';
 import { StaffPanel } from './pages/StaffPanel';
+
+function ProtectedStaffRoute({ children }: { children: ReactNode }) {
+  const { currentUser } = useAppStore();
+  const user = useMemo((): User | null => {
+    if (currentUser) return currentUser;
+    const stored = localStorage.getItem('user');
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored) as User;
+    } catch {
+      return null;
+    }
+  }, [currentUser]);
+
+  if (!user || user.role === 'CUSTOMER') {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 function App() {
   const { setCurrentUser } = useAppStore();
@@ -34,7 +55,14 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/reserve/:vehicleId" element={<Reservation />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/staff" element={<StaffPanel />} />
+            <Route
+              path="/staff"
+              element={
+                <ProtectedStaffRoute>
+                  <StaffPanel />
+                </ProtectedStaffRoute>
+              }
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

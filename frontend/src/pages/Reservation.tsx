@@ -86,6 +86,12 @@ export const Reservation = () => {
   const locked = step !== 'form';
   const days = useMemo(() => Math.max(0, calculateDays(startDate, endDate)), [startDate, endDate]);
 
+  const resetPaymentFlow = () => {
+    setStep('form');
+    setTxId(null);
+    setReservationId(null);
+  };
+
   const breakdown = useMemo(() => {
     if (!vehicle) return null;
     const base = days * vehicle.pricePerDay;
@@ -147,6 +153,7 @@ export const Reservation = () => {
       setSuccessOpen(true);
     } catch {
       showNotify('Payment confirmation failed.', 'error');
+      resetPaymentFlow();
     } finally {
       setSubmitting(false);
     }
@@ -157,9 +164,8 @@ export const Reservation = () => {
     setSubmitting(true);
     try {
       await paymentService.failPayment(txId);
-      showNotify('Payment was marked as failed.', 'error');
-      setStep('form');
-      setTxId(null);
+      resetPaymentFlow();
+      showNotify('Payment failed. You can adjust your booking and try again.', 'error');
     } catch {
       showNotify('Could not simulate payment failure.', 'error');
     } finally {

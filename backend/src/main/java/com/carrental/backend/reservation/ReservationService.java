@@ -184,6 +184,11 @@ public class ReservationService {
                     );
                 }
                 reservation.setExtraCharges(request.getExtraCharges());
+                if (request.getExtraCharges() > 0) {
+                    reservation.setTotalPrice(
+                            reservation.getTotalPrice() + request.getExtraCharges()
+                    );
+                }
             }
         }
 

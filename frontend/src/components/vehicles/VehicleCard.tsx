@@ -1,6 +1,7 @@
 import { Card, Image, Text, Badge, Group, Box, Stack } from '@mantine/core';
 import type { Vehicle } from '../../types/Vehicle';
 import { Button } from '../common';
+import { formatCurrency } from '../../utils/dateUtils';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -18,20 +19,14 @@ export const VehicleCard = ({ vehicle, onDetails, onReserve }: VehicleCardProps)
           h={180}
           fallbackSrc="https://placehold.co/400x300?text=No+Image"
         />
-        {/* price tag badge, top-right corner */}
         <Badge
           color="dark"
           size="lg"
           radius="xl"
           style={{ position: 'absolute', top: 12, right: 12 }}
         >
-          $ {vehicle.pricePerDay}
+          {formatCurrency(vehicle.pricePerDay)}/day
         </Badge>
-        {!vehicle.available && (
-          <Badge color="red" radius="xl" style={{ position: 'absolute', top: 12, left: 12 }}>
-            Unavailable
-          </Badge>
-        )}
       </Box>
     </Card.Section>
 
@@ -50,7 +45,7 @@ export const VehicleCard = ({ vehicle, onDetails, onReserve }: VehicleCardProps)
         <Button variant="outline" size="sm" radius="xl" onClick={() => onDetails(vehicle)}>
           details
         </Button>
-        <Button variant="pill" size="sm" disabled={!vehicle.available} onClick={() => onReserve(vehicle)}>
+        <Button variant="pill" size="sm" onClick={() => onReserve(vehicle)}>
           reserve
         </Button>
       </Group>

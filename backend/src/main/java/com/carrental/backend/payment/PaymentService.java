@@ -63,6 +63,7 @@ public class PaymentService {
                         HttpStatus.NOT_FOUND,
                         "Payment not found"
                 ));
+        SecurityUtils.requireOwnerOrStaff(payment.getReservation().getUser().getId());
 
         if (payment.getStatus() != PaymentStatus.PENDING) {
             throw new ResponseStatusException(
@@ -89,6 +90,7 @@ public class PaymentService {
                         HttpStatus.NOT_FOUND,
                         "Payment not found"
                 ));
+        SecurityUtils.requireOwnerOrStaff(payment.getReservation().getUser().getId());
 
         if (payment.getStatus() != PaymentStatus.PENDING) {
             throw new ResponseStatusException(
