@@ -17,8 +17,8 @@ export const calculateTotalPrice = (pricePerDay: number, startDate: string, endD
 };
 
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('pl-PL', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'PLN',
   }).format(amount);
 };

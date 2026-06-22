@@ -15,6 +15,17 @@ const ACTIVE_STATUSES = [
   ReservationStatus.ACTIVE,
 ] as string[];
 
+const AGREEMENT_STATUSES = [
+  ReservationStatus.CONFIRMED,
+  ReservationStatus.ACTIVE,
+  ReservationStatus.COMPLETED,
+] as string[];
+
+const CANCELLABLE_STATUSES = [
+  ReservationStatus.PENDING_PAYMENT,
+  ReservationStatus.CONFIRMED,
+] as string[];
+
 // Mantine color per reservation status.
 const STATUS_COLOR: Record<string, string> = {
   PENDING_PAYMENT: 'yellow',
@@ -155,15 +166,17 @@ export const Dashboard = () => {
                 <Badge color={STATUS_COLOR[r.status] ?? 'gray'}>
                   {RESERVATION_STATUS_LABELS[r.status] ?? r.status}
                 </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  loading={downloadingId === r.id}
-                  onClick={() => downloadAgreement(r)}
-                >
-                  Agreement
-                </Button>
-                {isActive && (
+                {AGREEMENT_STATUSES.includes(r.status) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    loading={downloadingId === r.id}
+                    onClick={() => downloadAgreement(r)}
+                  >
+                    Agreement
+                  </Button>
+                )}
+                {isActive && CANCELLABLE_STATUSES.includes(r.status) && (
                   <Button variant="danger" size="sm" onClick={() => setCancelTarget(r)}>
                     Cancel booking
                   </Button>

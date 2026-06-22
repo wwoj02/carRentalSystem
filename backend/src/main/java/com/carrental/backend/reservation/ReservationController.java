@@ -31,8 +31,11 @@ public class ReservationController {
     }
 
     @PatchMapping("/{id}/pickup")
-    public Reservation processPickup(@PathVariable Integer id) {
-        return reservationService.processPickup(id);
+    public Reservation processPickup(
+            @PathVariable Integer id,
+            @RequestBody(required = false) PickupRequest request
+    ) {
+        return reservationService.processPickup(id, request);
     }
 
     @PatchMapping("/{id}/return")

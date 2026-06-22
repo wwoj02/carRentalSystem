@@ -1,5 +1,8 @@
 package com.carrental.backend.reservation;
 
+import com.carrental.backend.payment.PaymentRepository;
+import com.carrental.backend.payment.PaymentStatus;
+import com.carrental.backend.security.SecurityUtils;
 import com.carrental.backend.user.User;
 import com.carrental.backend.user.UserRepository;
 import com.carrental.backend.vehicle.Vehicle;
@@ -19,6 +22,7 @@ public class ReservationService {
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
     private final ReservationRepository reservationRepository;
+    private final PaymentRepository paymentRepository;
 
     private static final double REGULAR_INSURANCE_PER_DAY = 15.0;
     private static final double PREMIUM_INSURANCE_PER_DAY = 30.0;
@@ -46,6 +50,7 @@ public class ReservationService {
             );
         }
 
+        // PAYMENT_FAILED and CANCELLED reservations do not block availability.
         boolean alreadyReserved = reservationRepository.existsOverlappingReservation(
                 vehicle.getId(),
                 request.getStartDate(),
@@ -106,6 +111,8 @@ public class ReservationService {
                         "Reservation not found"
                 ));
 
+        SecurityUtils.requireOwnerOrStaff(reservation.getUser().getId());
+
         if (reservation.getStatus() != ReservationStatus.CONFIRMED
         && reservation.getStatus() != ReservationStatus.PENDING_PAYMENT) {
             throw new ResponseStatusException(
@@ -114,6 +121,12 @@ public class ReservationService {
             );
         }
 
+        paymentRepository.findByReservationId(id).ifPresent(payment -> {
+            if (payment.getStatus() == PaymentStatus.PENDING) {
+                payment.setStatus(PaymentStatus.CANCELLED);
+                paymentRepository.save(payment);
+            }
+        });
 
         reservation.setStatus(ReservationStatus.CANCELLED);
 
@@ -121,10 +134,11 @@ public class ReservationService {
     }
 
     public List<Reservation> getReservationByUser(Integer userId) {
+        SecurityUtils.requireOwnerOrStaff(userId);
         return reservationRepository.findByUserId(userId);
     }
 
-    public Reservation processPickup(Integer id) {
+    public Reservation processPickup(Integer id, PickupRequest request) {
         Reservation reservation = getReservation(id);
 
         if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
@@ -135,8 +149,11 @@ public class ReservationService {
         }
 
         reservation.setStatus(ReservationStatus.ACTIVE);
-        reservation.getVehicle().setAvailable(false);
-        vehicleRepository.save(reservation.getVehicle());
+        reservation.setPickupNotes(
+                request == null || request.getPickupNotes() == null
+                        ? null
+                        : request.getPickupNotes().trim()
+        );
 
         return reservationRepository.save(reservation);
     }
@@ -152,13 +169,23 @@ public class ReservationService {
         }
 
         reservation.setStatus(ReservationStatus.COMPLETED);
-        reservation.setReturnNotes(
-                request == null || request.getReturnNotes() == null
-                        ? null
-                        : request.getReturnNotes().trim()
-        );
-        reservation.getVehicle().setAvailable(true);
-        vehicleRepository.save(reservation.getVehicle());
+        if (request != null) {
+            reservation.setReturnNotes(
+                    request.getReturnNotes() == null ? null : request.getReturnNotes().trim()
+            );
+            reservation.setDamageNotes(
+                    request.getDamageNotes() == null ? null : request.getDamageNotes().trim()
+            );
+            if (request.getExtraCharges() != null) {
+                if (request.getExtraCharges() < 0) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Extra charges cannot be negative"
+                    );
+                }
+                reservation.setExtraCharges(request.getExtraCharges());
+            }
+        }
 
         return reservationRepository.save(reservation);
     }
@@ -173,6 +200,17 @@ public class ReservationService {
 
     public String generateAgreement(Integer id) {
         Reservation reservation = getReservation(id);
+
+        SecurityUtils.requireOwnerOrStaff(reservation.getUser().getId());
+
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED
+                && reservation.getStatus() != ReservationStatus.ACTIVE
+                && reservation.getStatus() != ReservationStatus.COMPLETED) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Agreement is only available for confirmed, active, or completed reservations"
+            );
+        }
 
         return """
                 RENTAL AGREEMENT
@@ -200,8 +238,16 @@ public class ReservationService {
                 GPS navigation: %s
                 Young driver: %s
 
+                Pickup notes:
+                %s
+
                 Return notes:
                 %s
+
+                Damage notes:
+                %s
+
+                Extra charges: %.2f PLN
 
                 Total price: %.2f PLN
 
@@ -223,7 +269,10 @@ public class ReservationService {
                 blankToDash(reservation.getInsuranceType()),
                 yesNo(reservation.isGpsIncluded()),
                 yesNo(reservation.isYoungDriver()),
+                blankToDash(reservation.getPickupNotes()),
                 blankToDash(reservation.getReturnNotes()),
+                blankToDash(reservation.getDamageNotes()),
+                reservation.getExtraCharges(),
                 reservation.getTotalPrice()
         );
     }

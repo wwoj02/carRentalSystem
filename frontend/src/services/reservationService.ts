@@ -1,5 +1,5 @@
 import api from './api';
-import type { Reservation, CreateReservationRequest } from '../types/Reservation';
+import type { Reservation, CreateReservationRequest, ProcessReturnRequest } from '../types/Reservation';
 
 export const reservationService = {
   async createReservation(request: CreateReservationRequest): Promise<Reservation> {
@@ -27,8 +27,8 @@ export const reservationService = {
     return data;
   },
 
-  async processReturn(id: number, returnNotes: string): Promise<Reservation> {
-    const { data } = await api.patch<Reservation>(`/reservations/${id}/return`, { returnNotes });
+  async processReturn(id: number, payload: ProcessReturnRequest): Promise<Reservation> {
+    const { data } = await api.patch<Reservation>(`/reservations/${id}/return`, payload);
     return data;
   },
 

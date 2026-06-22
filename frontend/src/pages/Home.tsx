@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Grid, Title, Box, Paper, Text } from '@mantine/core';
 import { useVehicles } from '../hooks/useVehicles';
@@ -43,6 +43,13 @@ export const Home = () => {
   });
 
   const [filters, setFilters] = useState<CatalogFilters>(defaultFilters());
+
+  useEffect(() => {
+    if (vehicles.length > 0) {
+      setFilters((prev) => ({ ...prev, maxPrice: priceBounds.max }));
+    }
+  }, [priceBounds.max, vehicles.length]);
+
   const effectiveMaxPrice = filters.maxPrice || priceBounds.max;
 
   const filtered = useMemo(() => {

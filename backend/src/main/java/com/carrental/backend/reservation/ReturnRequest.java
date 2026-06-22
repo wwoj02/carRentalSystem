@@ -7,4 +7,6 @@ import lombok.Setter;
 @Setter
 public class ReturnRequest {
     private String returnNotes;
+    private String damageNotes;
+    private Double extraCharges;
 }

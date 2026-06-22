@@ -24,7 +24,14 @@ export type Reservation = {
   gpsIncluded: boolean;
   youngDriver: boolean;
   returnNotes?: string;
+  damageNotes?: string;
+  extraCharges?: number;
   status: ReservationStatusType;
+};
+
+export type ProcessReturnRequest = {
+  damageNotes?: string;
+  extraCharges?: number;
 };
 
 export type CreateReservationRequest = {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Container,
+  Grid,
   Group,
   Paper,
   Stack,
@@ -14,8 +15,11 @@ import {
 } from '@mantine/core';
 import { reservationService } from '../services/reservationService';
 import { vehicleService } from '../services/vehicleService';
+import { userService } from '../services/userService';
+import { reportService, type ReportSummary } from '../services/reportService';
 import type { Reservation, ReservationStatusType } from '../types/Reservation';
 import type { Vehicle } from '../types/Vehicle';
+import type { User } from '../types/User';
 import { ReservationStatus } from '../types/Reservation';
 import { Button, Badge, Modal, Spinner, Input } from '../components/common';
 import { formatCurrency, formatDate } from '../utils/dateUtils';
@@ -31,7 +35,7 @@ const STATUS_COLOR: Record<string, string> = {
   PAYMENT_FAILED: 'red',
 };
 
-type Tab = 'open' | 'all' | 'fleet';
+type Tab = 'open' | 'all' | 'fleet' | 'customers' | 'reports';
 
 type VehicleForm = Omit<Vehicle, 'id'>;
 
@@ -54,8 +58,15 @@ export const StaffPanel = () => {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<number | null>(null);
   const [returnTarget, setReturnTarget] = useState<Reservation | null>(null);
-  const [returnNotes, setReturnNotes] = useState('');
+  const [damageNotes, setDamageNotes] = useState('');
+  const [extraCharges, setExtraCharges] = useState(0);
   const [tab, setTab] = useState<Tab>('open');
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [reportFrom, setReportFrom] = useState('');
+  const [reportTo, setReportTo] = useState('');
+  const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const [vehicleForm, setVehicleForm] = useState<VehicleForm>(emptyVehicleForm);
   const [editingVehicleId, setEditingVehicleId] = useState<number | null>(null);
@@ -90,9 +101,28 @@ export const StaffPanel = () => {
     };
   }, [currentUser?.role, showNotify]);
 
+  useEffect(() => {
+    if (tab !== 'customers' || (currentUser?.role !== 'EMPLOYEE' && currentUser?.role !== 'ADMIN')) return;
+    let active = true;
+    (async () => {
+      setUsersLoading(true);
+      try {
+        const data = await userService.getUsers();
+        if (active) setUsers(data);
+      } catch {
+        if (active) showNotify('Failed to load customers.', 'error');
+      } finally {
+        if (active) setUsersLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [tab, currentUser?.role, showNotify]);
+
   const visibleReservations = useMemo(() => {
     if (tab === 'all') return reservations;
-    if (tab === 'fleet') return [];
+    if (tab === 'fleet' || tab === 'customers' || tab === 'reports') return [];
     return reservations.filter((reservation) =>
       [ReservationStatus.CONFIRMED, ReservationStatus.ACTIVE].includes(
         reservation.status as Extract<ReservationStatusType, 'CONFIRMED' | 'ACTIVE'>,
@@ -116,6 +146,15 @@ export const StaffPanel = () => {
   };
 
   const handlePickup = async (reservation: Reservation) => {
+    const customer =
+      reservation.customerName || `${reservation.user.firstName} ${reservation.user.lastName}`;
+    if (
+      !window.confirm(
+        `Confirm pickup for ${reservation.vehicle.brand} ${reservation.vehicle.model} (${customer})?`,
+      )
+    ) {
+      return;
+    }
     setActionId(reservation.id);
     try {
       const updated = await reservationService.processPickup(reservation.id);
@@ -132,11 +171,15 @@ export const StaffPanel = () => {
     if (!returnTarget) return;
     setActionId(returnTarget.id);
     try {
-      const updated = await reservationService.processReturn(returnTarget.id, returnNotes);
+      const updated = await reservationService.processReturn(returnTarget.id, {
+        damageNotes: damageNotes.trim() || undefined,
+        extraCharges: extraCharges > 0 ? extraCharges : undefined,
+      });
       updateReservation(updated);
       showNotify('Vehicle return processed.', 'success');
       setReturnTarget(null);
-      setReturnNotes('');
+      setDamageNotes('');
+      setExtraCharges(0);
     } catch {
       showNotify('Could not process return.', 'error');
     } finally {
@@ -146,7 +189,24 @@ export const StaffPanel = () => {
 
   const openReturnModal = (reservation: Reservation) => {
     setReturnTarget(reservation);
-    setReturnNotes(reservation.returnNotes ?? '');
+    setDamageNotes(reservation.damageNotes ?? reservation.returnNotes ?? '');
+    setExtraCharges(reservation.extraCharges ?? 0);
+  };
+
+  const loadReport = async () => {
+    if (!reportFrom || !reportTo) {
+      showNotify('Select both start and end dates.', 'error');
+      return;
+    }
+    setReportLoading(true);
+    try {
+      const summary = await reportService.getSummary(reportFrom, reportTo);
+      setReportSummary(summary);
+    } catch {
+      showNotify('Failed to load report.', 'error');
+    } finally {
+      setReportLoading(false);
+    }
   };
 
   const openCreateVehicle = () => {
@@ -219,6 +279,67 @@ export const StaffPanel = () => {
       setDeletingVehicleId(null);
     }
   };
+
+  const customerRows = users.map((user) => (
+    <Table.Tr key={user.id}>
+      <Table.Td>
+        <Text size="sm" fw={600}>
+          {user.firstName} {user.lastName}
+        </Text>
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">{user.email}</Text>
+      </Table.Td>
+      <Table.Td>
+        <Badge color={user.role === 'CUSTOMER' ? 'blue' : 'dark'}>{user.role}</Badge>
+      </Table.Td>
+    </Table.Tr>
+  ));
+
+  const reportCards = reportSummary && (
+    <Grid>
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Paper p="md" radius="lg" withBorder>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+            Total revenue
+          </Text>
+          <Text size="xl" fw={700} mt={4}>
+            {formatCurrency(reportSummary.totalRevenue)}
+          </Text>
+        </Paper>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Paper p="md" radius="lg" withBorder>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+            Reservations
+          </Text>
+          <Text size="xl" fw={700} mt={4}>
+            {reportSummary.reservationCount}
+          </Text>
+        </Paper>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Paper p="md" radius="lg" withBorder>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+            Completed
+          </Text>
+          <Text size="xl" fw={700} mt={4}>
+            {reportSummary.completedCount}
+          </Text>
+        </Paper>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Paper p="md" radius="lg" withBorder>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+            Fleet utilization
+          </Text>
+          <Text size="xl" fw={700} mt={4}>
+            {reportSummary.fleetUtilizationPercent.toFixed(1)}%
+          </Text>
+        </Paper>
+      </Grid.Col>
+    </Grid>
+  );
 
   const rows = visibleReservations.map((reservation) => (
     <Table.Tr key={reservation.id}>
@@ -348,10 +469,60 @@ export const StaffPanel = () => {
             <Tabs.Tab value="open">To process</Tabs.Tab>
             <Tabs.Tab value="all">All reservations</Tabs.Tab>
             <Tabs.Tab value="fleet">Fleet</Tabs.Tab>
+            <Tabs.Tab value="customers">Customers</Tabs.Tab>
+            <Tabs.Tab value="reports">Reports</Tabs.Tab>
           </Tabs.List>
 
           <Paper radius="lg" shadow="sm" withBorder>
-            {loading ? (
+            {tab === 'customers' ? (
+              usersLoading ? (
+                <Spinner size="lg" label="Loading customers..." className="py-24" />
+              ) : users.length === 0 ? (
+                <Stack align="center" py="xl">
+                  <Text c="dimmed">No customers to show.</Text>
+                </Stack>
+              ) : (
+                <Table.ScrollContainer minWidth={600}>
+                  <Table verticalSpacing="md">
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Name</Table.Th>
+                        <Table.Th>Email</Table.Th>
+                        <Table.Th>Role</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>{customerRows}</Table.Tbody>
+                  </Table>
+                </Table.ScrollContainer>
+              )
+            ) : tab === 'reports' ? (
+              <Stack p="lg" gap="lg">
+                <Group align="flex-end" wrap="wrap">
+                  <Input
+                    label="From"
+                    type="date"
+                    value={reportFrom}
+                    onChange={(event) => setReportFrom(event.currentTarget.value)}
+                  />
+                  <Input
+                    label="To"
+                    type="date"
+                    value={reportTo}
+                    onChange={(event) => setReportTo(event.currentTarget.value)}
+                  />
+                  <Button onClick={loadReport} loading={reportLoading}>
+                    Generate report
+                  </Button>
+                </Group>
+                {reportSummary ? (
+                  reportCards
+                ) : (
+                  <Text c="dimmed" size="sm">
+                    Select a date range and generate a report.
+                  </Text>
+                )}
+              </Stack>
+            ) : loading ? (
               <Spinner size="lg" label="Loading staff data..." className="py-24" />
             ) : tab === 'fleet' ? (
               vehicles.length === 0 ? (
@@ -496,11 +667,19 @@ export const StaffPanel = () => {
             </Text>
           )}
           <Textarea
-            label="Return notes"
+            label="Damage notes"
             minRows={4}
             placeholder="No damage"
-            value={returnNotes}
-            onChange={(event) => setReturnNotes(event.currentTarget.value)}
+            value={damageNotes}
+            onChange={(event) => setDamageNotes(event.currentTarget.value)}
+          />
+          <Input
+            label="Extra charges"
+            type="number"
+            min={0}
+            step={0.01}
+            value={extraCharges}
+            onChange={(event) => setExtraCharges(Number(event.currentTarget.value) || 0)}
           />
         </Stack>
       </Modal>

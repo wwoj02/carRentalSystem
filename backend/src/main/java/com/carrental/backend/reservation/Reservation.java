@@ -39,6 +39,15 @@ public class Reservation {
     @Column(length = 1000)
     private String returnNotes;
 
+    @Column(name = "pickup_notes", length = 2000)
+    private String pickupNotes;
+
+    @Column(name = "damage_notes", length = 2000)
+    private String damageNotes;
+
+    @Column(name = "extra_charges", nullable = false)
+    private double extraCharges = 0.0;
+
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 }

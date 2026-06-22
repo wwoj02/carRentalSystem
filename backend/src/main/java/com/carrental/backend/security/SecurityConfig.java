@@ -41,6 +41,8 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reservations").hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers("/api/reservations/*/pickup", "/api/reservations/*/return").hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .requestMatchers("/api/reports/**").hasAnyRole("EMPLOYEE", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

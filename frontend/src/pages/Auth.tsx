@@ -30,7 +30,7 @@ export const Auth = () => {
       const user = await login(loginForm);
       setCurrentUser(user);
       showNotify(`Welcome back, ${user.firstName}!`, 'success');
-      navigate('/dashboard');
+      navigate(user.role === 'EMPLOYEE' || user.role === 'ADMIN' ? '/staff' : '/dashboard');
     } catch (err) {
       showNotify(getErrorMessage(err, 'Invalid email or password.'), 'error');
     }

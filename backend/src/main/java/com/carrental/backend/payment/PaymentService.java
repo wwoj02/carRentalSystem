@@ -3,6 +3,7 @@ package com.carrental.backend.payment;
 import com.carrental.backend.reservation.Reservation;
 import com.carrental.backend.reservation.ReservationRepository;
 import com.carrental.backend.reservation.ReservationStatus;
+import com.carrental.backend.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,8 @@ public class PaymentService {
                         HttpStatus.NOT_FOUND,
                         "Reservation not found"
                 ));
+        SecurityUtils.requireOwnerOrStaff(reservation.getUser().getId());
+
         if (reservation.getStatus() != ReservationStatus.PENDING_PAYMENT) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
