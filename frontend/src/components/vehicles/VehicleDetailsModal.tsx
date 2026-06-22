@@ -63,7 +63,12 @@ export const VehicleDetailsModal = ({ vehicleId, onClose, onReserve }: VehicleDe
                 $ {vehicle.pricePerDay}
               </Text>
             </Group>
-            <Button variant="pill" size="lg" onClick={() => onReserve(vehicle)}>
+            <Button
+              variant="pill"
+              size="lg"
+              onClick={() => onReserve(vehicle)}
+              disabled={!vehicle.available}
+            >
               reserve now
             </Button>
           </Group>

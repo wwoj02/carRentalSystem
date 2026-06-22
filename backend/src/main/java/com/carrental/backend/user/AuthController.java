@@ -19,4 +19,9 @@ public class AuthController {
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
+
+    @DeleteMapping("/me")
+    public void deleteCurrentUser() {
+        authService.deleteCurrentUser();
+    }
 }

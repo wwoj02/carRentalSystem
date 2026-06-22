@@ -1,18 +1,35 @@
-import { Paper, TextInput, Checkbox, Stack, Text, Slider, Group, Anchor } from '@mantine/core';
+import { Paper, TextInput, Checkbox, Stack, Text, Slider, Group, Anchor, Select } from '@mantine/core';
 import { formatCurrency } from '../../utils/dateUtils';
+
+export type CatalogSort =
+  | 'price-asc'
+  | 'price-desc'
+  | 'year-asc'
+  | 'year-desc'
+  | 'brand-asc';
 
 export interface CatalogFilters {
   search: string;
   types: string[];
   brands: string[];
+  models: string[];
   driveTypes: string[];
   maxPrice: number;
+  sort: CatalogSort;
 }
+
+const SORT_OPTIONS: { value: CatalogSort; label: string }[] = [
+  { value: 'price-asc', label: 'Price: low to high' },
+  { value: 'price-desc', label: 'Price: high to low' },
+  { value: 'year-asc', label: 'Year: oldest first' },
+  { value: 'year-desc', label: 'Year: newest first' },
+  { value: 'brand-asc', label: 'Brand: A–Z' },
+];
 
 interface FilterSidebarProps {
   filters: CatalogFilters;
   onChange: (filters: CatalogFilters) => void;
-  options: { types: string[]; brands: string[]; driveTypes: string[] };
+  options: { types: string[]; brands: string[]; models: string[]; driveTypes: string[] };
   priceBounds: { min: number; max: number };
   onReset: () => void;
 }
@@ -65,10 +82,23 @@ export const FilterSidebar = ({ filters, onChange, options, priceBounds, onReset
         onChange={(brands) => onChange({ ...filters, brands })}
       />
       <CheckboxGroup
+        title="Model"
+        values={options.models}
+        selected={filters.models}
+        onChange={(models) => onChange({ ...filters, models })}
+      />
+      <CheckboxGroup
         title="Drive"
         values={options.driveTypes}
         selected={filters.driveTypes}
         onChange={(driveTypes) => onChange({ ...filters, driveTypes })}
+      />
+
+      <Select
+        label="Sort by"
+        data={SORT_OPTIONS}
+        value={filters.sort}
+        onChange={(sort) => onChange({ ...filters, sort: (sort as CatalogSort) ?? 'price-asc' })}
       />
 
       {/* price range slider */}

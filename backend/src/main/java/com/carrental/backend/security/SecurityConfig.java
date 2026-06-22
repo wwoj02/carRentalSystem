@@ -33,13 +33,19 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/h2-console/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/auth/me").authenticated()
+                        .requestMatchers("/h2-console/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/vehicles/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/vehicles").hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/vehicles/**").hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/vehicles/**").hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reservations").hasAnyRole("EMPLOYEE", "ADMIN")
-                        .requestMatchers("/api/reservations/*/pickup", "/api/reservations/*/return").hasAnyRole("EMPLOYEE", "ADMIN")
+                        .requestMatchers(
+                                "/api/reservations/*/pickup",
+                                "/api/reservations/*/return",
+                                "/api/reservations/*/staff-cancel"
+                        ).hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users").hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users").hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers("/api/reports/**").hasAnyRole("EMPLOYEE", "ADMIN")

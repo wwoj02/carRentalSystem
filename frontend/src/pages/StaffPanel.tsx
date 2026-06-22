@@ -58,6 +58,9 @@ export const StaffPanel = () => {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<number | null>(null);
   const [returnTarget, setReturnTarget] = useState<Reservation | null>(null);
+  const [pickupTarget, setPickupTarget] = useState<Reservation | null>(null);
+  const [pickupNotes, setPickupNotes] = useState('');
+  const [cancelTarget, setCancelTarget] = useState<Reservation | null>(null);
   const [damageNotes, setDamageNotes] = useState('');
   const [extraCharges, setExtraCharges] = useState(0);
   const [tab, setTab] = useState<Tab>('open');
@@ -145,23 +148,39 @@ export const StaffPanel = () => {
     setReservations((prev) => prev.map((reservation) => (reservation.id === updated.id ? updated : reservation)));
   };
 
-  const handlePickup = async (reservation: Reservation) => {
-    const customer =
-      reservation.customerName || `${reservation.user.firstName} ${reservation.user.lastName}`;
-    if (
-      !window.confirm(
-        `Confirm pickup for ${reservation.vehicle.brand} ${reservation.vehicle.model} (${customer})?`,
-      )
-    ) {
-      return;
-    }
-    setActionId(reservation.id);
+  const openPickupModal = (reservation: Reservation) => {
+    setPickupTarget(reservation);
+    setPickupNotes('');
+  };
+
+  const handlePickup = async () => {
+    if (!pickupTarget) return;
+    setActionId(pickupTarget.id);
     try {
-      const updated = await reservationService.processPickup(reservation.id);
+      const updated = await reservationService.processPickup(pickupTarget.id, {
+        pickupNotes: pickupNotes.trim() || undefined,
+      });
       updateReservation(updated);
       showNotify('Vehicle pickup processed.', 'success');
+      setPickupTarget(null);
+      setPickupNotes('');
     } catch {
       showNotify('Could not process pickup.', 'error');
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleStaffCancel = async () => {
+    if (!cancelTarget) return;
+    setActionId(cancelTarget.id);
+    try {
+      const updated = await reservationService.staffCancelReservation(cancelTarget.id);
+      updateReservation(updated);
+      showNotify('Reservation cancelled.', 'success');
+      setCancelTarget(null);
+    } catch {
+      showNotify('Could not cancel reservation.', 'error');
     } finally {
       setActionId(null);
     }
@@ -341,6 +360,8 @@ export const StaffPanel = () => {
     </Grid>
   );
 
+  const cancellableStatuses = [ReservationStatus.CONFIRMED, ReservationStatus.PENDING_PAYMENT] as string[];
+
   const rows = visibleReservations.map((reservation) => (
     <Table.Tr key={reservation.id}>
       <Table.Td>
@@ -383,9 +404,19 @@ export const StaffPanel = () => {
             <Button
               size="sm"
               loading={actionId === reservation.id}
-              onClick={() => handlePickup(reservation)}
+              onClick={() => openPickupModal(reservation)}
             >
               Pickup
+            </Button>
+          )}
+          {cancellableStatuses.includes(reservation.status) && (
+            <Button
+              size="sm"
+              variant="danger"
+              loading={actionId === reservation.id}
+              onClick={() => setCancelTarget(reservation)}
+            >
+              Cancel
             </Button>
           )}
           {reservation.status === ReservationStatus.ACTIVE && (
@@ -569,6 +600,113 @@ export const StaffPanel = () => {
           </Paper>
         </Tabs>
       </Container>
+
+      <Modal
+        open={pickupTarget !== null}
+        onClose={() => setPickupTarget(null)}
+        title="Verify pickup"
+        size="lg"
+        footer={
+          <Group justify="flex-end">
+            <Button variant="ghost" onClick={() => setPickupTarget(null)} disabled={actionId !== null}>
+              Cancel
+            </Button>
+            <Button onClick={handlePickup} loading={pickupTarget ? actionId === pickupTarget.id : false}>
+              Confirm pickup
+            </Button>
+          </Group>
+        }
+      >
+        {pickupTarget && (
+          <Stack gap="sm">
+            <Text size="sm">
+              <Text span fw={600}>
+                Reservation ID:
+              </Text>{' '}
+              #{pickupTarget.id}
+            </Text>
+            <Text size="sm">
+              <Text span fw={600}>
+                Customer:
+              </Text>{' '}
+              {pickupTarget.customerName || `${pickupTarget.user.firstName} ${pickupTarget.user.lastName}`}
+            </Text>
+            <Text size="sm">
+              <Text span fw={600}>
+                Email:
+              </Text>{' '}
+              {pickupTarget.customerEmail || pickupTarget.user.email}
+            </Text>
+            <Text size="sm">
+              <Text span fw={600}>
+                Phone:
+              </Text>{' '}
+              {pickupTarget.customerPhone || '—'}
+            </Text>
+            <Text size="sm">
+              <Text span fw={600}>
+                Driving licence:
+              </Text>{' '}
+              {pickupTarget.drivingLicenceId || '—'}
+            </Text>
+            <Text size="sm">
+              <Text span fw={600}>
+                Vehicle:
+              </Text>{' '}
+              {pickupTarget.vehicle.brand} {pickupTarget.vehicle.model} ({pickupTarget.vehicle.year})
+            </Text>
+            <Text size="sm">
+              <Text span fw={600}>
+                Dates:
+              </Text>{' '}
+              {formatDate(pickupTarget.startDate)} – {formatDate(pickupTarget.endDate)}
+            </Text>
+            <Text size="sm">
+              <Text span fw={600}>
+                Total price:
+              </Text>{' '}
+              {formatCurrency(pickupTarget.totalPrice)}
+            </Text>
+            <Textarea
+              label="Pickup notes (optional)"
+              minRows={3}
+              placeholder="Condition at handover, fuel level, etc."
+              value={pickupNotes}
+              onChange={(event) => setPickupNotes(event.currentTarget.value)}
+            />
+          </Stack>
+        )}
+      </Modal>
+
+      <Modal
+        open={cancelTarget !== null}
+        onClose={() => setCancelTarget(null)}
+        title="Cancel reservation?"
+        footer={
+          <Group justify="flex-end">
+            <Button variant="ghost" onClick={() => setCancelTarget(null)} disabled={actionId !== null}>
+              Keep reservation
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleStaffCancel}
+              loading={cancelTarget ? actionId === cancelTarget.id : false}
+            >
+              Yes, cancel
+            </Button>
+          </Group>
+        }
+      >
+        {cancelTarget && (
+          <Text size="sm" c="dimmed">
+            Cancel reservation #{cancelTarget.id} for{' '}
+            <Text span fw={600} c="dark">
+              {cancelTarget.vehicle.brand} {cancelTarget.vehicle.model}
+            </Text>{' '}
+            ({formatDate(cancelTarget.startDate)} – {formatDate(cancelTarget.endDate)})? This cannot be undone.
+          </Text>
+        )}
+      </Modal>
 
       <Modal
         open={vehicleModalOpen}

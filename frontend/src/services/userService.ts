@@ -43,4 +43,9 @@ export const userService = {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
   },
+
+  async deleteAccount(): Promise<void> {
+    await api.delete('/auth/me');
+    this.clearCurrentUser();
+  },
 };

@@ -12,10 +12,12 @@ import { Auth } from './pages/Auth';
 import { Reservation } from './pages/Reservation';
 import { Dashboard } from './pages/Dashboard';
 import { StaffPanel } from './pages/StaffPanel';
+import { Privacy } from './pages/Privacy';
+import { Footer } from './components/layout/Footer';
 
-function ProtectedStaffRoute({ children }: { children: ReactNode }) {
+function useStoredUser(): User | null {
   const { currentUser } = useAppStore();
-  const user = useMemo((): User | null => {
+  return useMemo((): User | null => {
     if (currentUser) return currentUser;
     const stored = localStorage.getItem('user');
     if (!stored) return null;
@@ -25,6 +27,20 @@ function ProtectedStaffRoute({ children }: { children: ReactNode }) {
       return null;
     }
   }, [currentUser]);
+}
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const user = useStoredUser();
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function ProtectedStaffRoute({ children }: { children: ReactNode }) {
+  const user = useStoredUser();
 
   if (!user || user.role === 'CUSTOMER') {
     return <Navigate to="/auth" replace />;
@@ -49,12 +65,27 @@ function App() {
     <MantineProvider theme={theme}>
       <BrowserRouter>
         <Navbar />
-        <main>
+        <main style={{ minHeight: 'calc(100vh - 120px)' }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/reserve/:vehicleId" element={<Reservation />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route
+              path="/reserve/:vehicleId"
+              element={
+                <ProtectedRoute>
+                  <Reservation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/staff"
               element={
@@ -66,6 +97,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+        <Footer />
         <Toast />
       </BrowserRouter>
     </MantineProvider>

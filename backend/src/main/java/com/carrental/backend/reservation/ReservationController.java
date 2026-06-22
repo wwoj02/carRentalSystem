@@ -30,6 +30,11 @@ public class ReservationController {
         return reservationService.cancelReservation(id);
     }
 
+    @PatchMapping("/{id}/staff-cancel")
+    public Reservation staffCancelReservation(@PathVariable Integer id) {
+        return reservationService.staffCancelReservation(id);
+    }
+
     @PatchMapping("/{id}/pickup")
     public Reservation processPickup(
             @PathVariable Integer id,

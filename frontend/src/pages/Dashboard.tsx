@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Title, Text, Group, Tabs, Paper, Image, Stack, Box } from '@mantine/core';
 import { useAppStore } from '../store/appStore';
 import { reservationService } from '../services/reservationService';
+import { userService } from '../services/userService';
 import type { Reservation } from '../types/Reservation';
 import { ReservationStatus } from '../types/Reservation';
 import { Button, Modal, Spinner, Badge } from '../components/common';
@@ -40,13 +41,15 @@ type Tab = 'active' | 'history';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const { currentUser, showNotify } = useAppStore();
+  const { currentUser, setCurrentUser, showNotify } = useAppStore();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('active');
   const [cancelTarget, setCancelTarget] = useState<Reservation | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -94,6 +97,21 @@ export const Dashboard = () => {
     }
   };
 
+  const confirmDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      await userService.deleteAccount();
+      setCurrentUser(null);
+      showNotify('Your account has been deleted.', 'success');
+      navigate('/');
+    } catch {
+      showNotify('Could not delete your account. Cancel active reservations first.', 'error');
+    } finally {
+      setDeletingAccount(false);
+      setDeleteAccountOpen(false);
+    }
+  };
+
   const downloadAgreement = async (reservation: Reservation) => {
     setDownloadingId(reservation.id);
     try {
@@ -114,17 +132,7 @@ export const Dashboard = () => {
   };
 
   if (!currentUser) {
-    return (
-      <Container size="xs" py={80} ta="center">
-        <Title order={1}>Your dashboard</Title>
-        <Text c="dimmed" mt="xs">
-          Please register or log in to view your reservations.
-        </Text>
-        <Button mt="lg" onClick={() => navigate('/auth')}>
-          Register / Log in
-        </Button>
-      </Container>
-    );
+    return null;
   }
 
   const renderList = (list: Reservation[], isActive: boolean) => {
@@ -213,6 +221,20 @@ export const Dashboard = () => {
           <Tabs.Panel value="active">{renderList(activeList, true)}</Tabs.Panel>
           <Tabs.Panel value="history">{renderList(historyList, false)}</Tabs.Panel>
         </Tabs>
+
+        <Paper p="lg" radius="lg" withBorder mt="xl">
+          <Group justify="space-between" wrap="wrap">
+            <Box>
+              <Text fw={600}>Delete account</Text>
+              <Text size="sm" c="dimmed">
+                Permanently remove your account and reservation history. Not available with active bookings.
+              </Text>
+            </Box>
+            <Button variant="danger" onClick={() => setDeleteAccountOpen(true)}>
+              Delete my account
+            </Button>
+          </Group>
+        </Paper>
       </Container>
 
       <Modal
@@ -239,6 +261,27 @@ export const Dashboard = () => {
             ({formatDate(cancelTarget.startDate)} → {formatDate(cancelTarget.endDate)})? This action cannot be undone.
           </Text>
         )}
+      </Modal>
+
+      <Modal
+        open={deleteAccountOpen}
+        onClose={() => setDeleteAccountOpen(false)}
+        title="Delete your account?"
+        footer={
+          <Group justify="flex-end">
+            <Button variant="ghost" onClick={() => setDeleteAccountOpen(false)} disabled={deletingAccount}>
+              Keep account
+            </Button>
+            <Button variant="danger" onClick={confirmDeleteAccount} loading={deletingAccount}>
+              Yes, delete permanently
+            </Button>
+          </Group>
+        }
+      >
+        <Text size="sm" c="dimmed">
+          This will permanently delete your account and associated data. You must have no active reservations. This
+          action cannot be undone.
+        </Text>
       </Modal>
     </Box>
   );

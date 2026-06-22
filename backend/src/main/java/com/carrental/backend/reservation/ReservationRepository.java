@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ReservationRepository
         extends JpaRepository<Reservation, Integer> {
-    List<Reservation> findByUserId(Integer userId);
+    List<Reservation> findByUser_Id(Integer userId);
 
     @Query("""
     SELECT COUNT(r) > 0

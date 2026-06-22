@@ -30,4 +30,10 @@ public final class SecurityUtils {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
     }
+
+    public static void requireStaff() {
+        if (!isStaff(getCurrentUser())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+    }
 }

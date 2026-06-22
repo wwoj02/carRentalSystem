@@ -23,10 +23,15 @@ export type Reservation = {
   insuranceType?: 'none' | 'regular' | 'premium';
   gpsIncluded: boolean;
   youngDriver: boolean;
+  pickupNotes?: string;
   returnNotes?: string;
   damageNotes?: string;
   extraCharges?: number;
   status: ReservationStatusType;
+};
+
+export type ProcessPickupRequest = {
+  pickupNotes?: string;
 };
 
 export type ProcessReturnRequest = {

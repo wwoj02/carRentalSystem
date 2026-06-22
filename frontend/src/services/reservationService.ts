@@ -1,5 +1,10 @@
 import api from './api';
-import type { Reservation, CreateReservationRequest, ProcessReturnRequest } from '../types/Reservation';
+import type {
+  Reservation,
+  CreateReservationRequest,
+  ProcessPickupRequest,
+  ProcessReturnRequest,
+} from '../types/Reservation';
 
 export const reservationService = {
   async createReservation(request: CreateReservationRequest): Promise<Reservation> {
@@ -22,8 +27,13 @@ export const reservationService = {
     return data;
   },
 
-  async processPickup(id: number): Promise<Reservation> {
-    const { data } = await api.patch<Reservation>(`/reservations/${id}/pickup`);
+  async processPickup(id: number, payload?: ProcessPickupRequest): Promise<Reservation> {
+    const { data } = await api.patch<Reservation>(`/reservations/${id}/pickup`, payload ?? {});
+    return data;
+  },
+
+  async staffCancelReservation(id: number): Promise<Reservation> {
+    const { data } = await api.patch<Reservation>(`/reservations/${id}/staff-cancel`);
     return data;
   },
 

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Title, Text, Paper, Tabs, Stack, PasswordInput } from '@mantine/core';
+import { Container, Title, Text, Paper, Tabs, Stack, PasswordInput, Anchor } from '@mantine/core';
+import { Link } from 'react-router-dom';
 import { useUser } from '../hooks/useUser';
 import { useAppStore } from '../store/appStore';
 import { Button, Input } from '../components/common';
@@ -67,6 +68,9 @@ export const Auth = () => {
           <Text size="sm" c="dimmed">
             Sign in or create an account to start renting.
           </Text>
+          <Anchor component={Link} to="/privacy" size="xs" c="dimmed">
+            Privacy policy
+          </Anchor>
         </Stack>
 
         <Paper radius="lg" shadow="sm" withBorder>

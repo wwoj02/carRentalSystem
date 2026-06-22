@@ -184,6 +184,16 @@ export const Reservation = () => {
       </Container>
     );
 
+  if (!vehicle.available)
+    return (
+      <Container size="sm" py={80} ta="center">
+        <Text c="dimmed">This vehicle is not available for reservation.</Text>
+        <Button mt="md" onClick={() => navigate('/')}>
+          Back to catalog
+        </Button>
+      </Container>
+    );
+
   return (
     <Box bg="gray.1" style={{ minHeight: '100%' }}>
       <Container size="md" py="xl">

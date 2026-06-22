@@ -10,6 +10,7 @@ import com.carrental.backend.vehicle.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.temporal.ChronoUnit;
@@ -30,6 +31,8 @@ public class ReservationService {
     private static final double YOUNG_DRIVER_FEE = 25.0;
 
     public Reservation createReservation(ReservationRequest request) {
+        SecurityUtils.requireOwnerOrStaff(request.getUserId());
+
         User user = userRepository.findById(
                 request.getUserId()
         ).orElseThrow(() -> new ResponseStatusException(
@@ -43,6 +46,13 @@ public class ReservationService {
                 HttpStatus.NOT_FOUND,
                 "Vehicle not found"
         ));
+
+        if (!vehicle.isAvailable()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Vehicle is not available"
+            );
+        }
 
         if (!request.getEndDate().isAfter(request.getStartDate())) {
             throw new ResponseStatusException(
@@ -105,14 +115,18 @@ public class ReservationService {
     }
 
     public Reservation cancelReservation(Integer id) {
-        Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Reservation not found"
-                ));
-
+        Reservation reservation = getReservation(id);
         SecurityUtils.requireOwnerOrStaff(reservation.getUser().getId());
+        return cancelReservationInternal(reservation);
+    }
 
+    public Reservation staffCancelReservation(Integer id) {
+        SecurityUtils.requireStaff();
+        Reservation reservation = getReservation(id);
+        return cancelReservationInternal(reservation);
+    }
+
+    private Reservation cancelReservationInternal(Reservation reservation) {
         if (reservation.getStatus() != ReservationStatus.CONFIRMED
         && reservation.getStatus() != ReservationStatus.PENDING_PAYMENT) {
             throw new ResponseStatusException(
@@ -121,7 +135,7 @@ public class ReservationService {
             );
         }
 
-        paymentRepository.findByReservationId(id).ifPresent(payment -> {
+        paymentRepository.findByReservationId(reservation.getId()).ifPresent(payment -> {
             if (payment.getStatus() == PaymentStatus.PENDING) {
                 payment.setStatus(PaymentStatus.CANCELLED);
                 paymentRepository.save(payment);
@@ -135,9 +149,10 @@ public class ReservationService {
 
     public List<Reservation> getReservationByUser(Integer userId) {
         SecurityUtils.requireOwnerOrStaff(userId);
-        return reservationRepository.findByUserId(userId);
+        return reservationRepository.findByUser_Id(userId);
     }
 
+    @Transactional
     public Reservation processPickup(Integer id, PickupRequest request) {
         Reservation reservation = getReservation(id);
 
@@ -155,9 +170,16 @@ public class ReservationService {
                         : request.getPickupNotes().trim()
         );
 
+        Vehicle vehicle = reservation.getVehicle();
+        if (vehicle.isAvailable()) {
+            vehicle.setAvailable(false);
+            vehicleRepository.save(vehicle);
+        }
+
         return reservationRepository.save(reservation);
     }
 
+    @Transactional
     public Reservation processReturn(Integer id, ReturnRequest request) {
         Reservation reservation = getReservation(id);
 
@@ -191,6 +213,10 @@ public class ReservationService {
                 }
             }
         }
+
+        Vehicle vehicle = reservation.getVehicle();
+        vehicle.setAvailable(true);
+        vehicleRepository.save(vehicle);
 
         return reservationRepository.save(reservation);
     }
