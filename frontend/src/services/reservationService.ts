@@ -4,6 +4,7 @@ import type {
   CreateReservationRequest,
   ProcessPickupRequest,
   ProcessReturnRequest,
+  UpdateReservationDatesRequest,
 } from '../types/Reservation';
 
 export const reservationService = {
@@ -14,6 +15,11 @@ export const reservationService = {
 
   async getAllReservations(): Promise<Reservation[]> {
     const { data } = await api.get<Reservation[]>('/reservations');
+    return data;
+  },
+
+  async updateReservation(id: number, request: UpdateReservationDatesRequest): Promise<Reservation> {
+    const { data } = await api.patch<Reservation>(`/reservations/${id}`, request);
     return data;
   },
 

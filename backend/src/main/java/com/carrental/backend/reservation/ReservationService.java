@@ -110,6 +110,56 @@ public class ReservationService {
         return reservationRepository.save(reservation);
     }
 
+    public Reservation updateReservation(Integer id, UpdateReservationRequest request) {
+        SecurityUtils.requireStaff();
+
+        Reservation reservation = getReservation(id);
+
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED
+                && reservation.getStatus() != ReservationStatus.PENDING_PAYMENT) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Only confirmed or pending payment reservations can be updated"
+            );
+        }
+
+        if (!request.endDate().isAfter(request.startDate())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "End date must be after start date"
+            );
+        }
+
+        boolean alreadyReserved = reservationRepository.existsOverlappingReservationExcluding(
+                reservation.getVehicle().getId(),
+                request.startDate(),
+                request.endDate(),
+                reservation.getId(),
+                List.of(
+                        ReservationStatus.PENDING_PAYMENT,
+                        ReservationStatus.CONFIRMED,
+                        ReservationStatus.ACTIVE
+                )
+        );
+
+        if (alreadyReserved) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Vehicle is already reserved in this period"
+            );
+        }
+
+        long days = ChronoUnit.DAYS.between(request.startDate(), request.endDate());
+        ReservationRequest priceRequest = toPriceRequest(reservation);
+        double totalPrice = calculateTotalPrice(priceRequest, reservation.getVehicle(), days);
+
+        reservation.setStartDate(request.startDate());
+        reservation.setEndDate(request.endDate());
+        reservation.setTotalPrice(totalPrice);
+
+        return reservationRepository.save(reservation);
+    }
+
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
     }
@@ -306,6 +356,14 @@ public class ReservationService {
                 reservation.getExtraCharges(),
                 reservation.getTotalPrice()
         );
+    }
+
+    private ReservationRequest toPriceRequest(Reservation reservation) {
+        ReservationRequest request = new ReservationRequest();
+        request.setInsuranceType(reservation.getInsuranceType());
+        request.setGpsIncluded(reservation.isGpsIncluded());
+        request.setYoungDriver(reservation.isYoungDriver());
+        return request;
     }
 
     private double calculateTotalPrice(ReservationRequest request, Vehicle vehicle, long days) {

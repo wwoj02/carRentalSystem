@@ -25,6 +25,7 @@ import { Button, Badge, Modal, Spinner, Input } from '../components/common';
 import { formatCurrency, formatDate } from '../utils/dateUtils';
 import { RESERVATION_STATUS_LABELS } from '../utils/constants';
 import { useAppStore } from '../store/appStore';
+import { getApiErrorMessage } from '../services/api';
 
 const STATUS_COLOR: Record<string, string> = {
   PENDING_PAYMENT: 'yellow',
@@ -75,6 +76,12 @@ export const StaffPanel = () => {
   const [editingVehicleId, setEditingVehicleId] = useState<number | null>(null);
   const [savingVehicle, setSavingVehicle] = useState(false);
   const [deletingVehicleId, setDeletingVehicleId] = useState<number | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState<User | null>(null);
+  const [customerForm, setCustomerForm] = useState({ firstName: '', lastName: '', email: '' });
+  const [savingCustomer, setSavingCustomer] = useState(false);
+  const [editReservationTarget, setEditReservationTarget] = useState<Reservation | null>(null);
+  const [reservationDates, setReservationDates] = useState({ startDate: '', endDate: '' });
+  const [savingReservation, setSavingReservation] = useState(false);
 
   useEffect(() => {
     if (currentUser?.role !== 'EMPLOYEE' && currentUser?.role !== 'ADMIN') {
@@ -299,6 +306,71 @@ export const StaffPanel = () => {
     }
   };
 
+  const openEditCustomer = (user: User) => {
+    setEditingCustomer(user);
+    setCustomerForm({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    });
+  };
+
+  const saveCustomer = async () => {
+    if (!editingCustomer) return;
+    if (!customerForm.firstName.trim() || !customerForm.lastName.trim() || !customerForm.email.trim()) {
+      showNotify('First name, last name and email are required.', 'error');
+      return;
+    }
+
+    setSavingCustomer(true);
+    try {
+      const updated = await userService.updateUser(editingCustomer.id, {
+        firstName: customerForm.firstName.trim(),
+        lastName: customerForm.lastName.trim(),
+        email: customerForm.email.trim(),
+      });
+      setUsers((prev) => prev.map((user) => (user.id === updated.id ? updated : user)));
+      showNotify('Customer updated.', 'success');
+      setEditingCustomer(null);
+    } catch (err) {
+      showNotify(getApiErrorMessage(err) ?? 'Could not update customer.', 'error');
+    } finally {
+      setSavingCustomer(false);
+    }
+  };
+
+  const openEditReservation = (reservation: Reservation) => {
+    setEditReservationTarget(reservation);
+    setReservationDates({
+      startDate: reservation.startDate,
+      endDate: reservation.endDate,
+    });
+  };
+
+  const saveReservationDates = async () => {
+    if (!editReservationTarget) return;
+    if (!reservationDates.startDate || !reservationDates.endDate) {
+      showNotify('Both dates are required.', 'error');
+      return;
+    }
+    if (reservationDates.endDate <= reservationDates.startDate) {
+      showNotify('End date must be after start date.', 'error');
+      return;
+    }
+
+    setSavingReservation(true);
+    try {
+      const updated = await reservationService.updateReservation(editReservationTarget.id, reservationDates);
+      updateReservation(updated);
+      showNotify('Reservation dates updated.', 'success');
+      setEditReservationTarget(null);
+    } catch (err) {
+      showNotify(getApiErrorMessage(err) ?? 'Could not update reservation.', 'error');
+    } finally {
+      setSavingReservation(false);
+    }
+  };
+
   const customerRows = users.map((user) => (
     <Table.Tr key={user.id}>
       <Table.Td>
@@ -311,6 +383,15 @@ export const StaffPanel = () => {
       </Table.Td>
       <Table.Td>
         <Badge color={user.role === 'CUSTOMER' ? 'blue' : 'dark'}>{user.role}</Badge>
+      </Table.Td>
+      <Table.Td>
+        {user.role === 'CUSTOMER' && (
+          <Group gap="xs" justify="flex-end">
+            <Button size="sm" variant="outline" onClick={() => openEditCustomer(user)}>
+              Edit
+            </Button>
+          </Group>
+        )}
       </Table.Td>
     </Table.Tr>
   ));
@@ -361,6 +442,7 @@ export const StaffPanel = () => {
   );
 
   const cancellableStatuses = [ReservationStatus.CONFIRMED, ReservationStatus.PENDING_PAYMENT] as string[];
+  const editableReservationStatuses = cancellableStatuses;
 
   const rows = visibleReservations.map((reservation) => (
     <Table.Tr key={reservation.id}>
@@ -400,6 +482,16 @@ export const StaffPanel = () => {
       </Table.Td>
       <Table.Td>
         <Group gap="xs" justify="flex-end">
+          {editableReservationStatuses.includes(reservation.status) && (
+            <Button
+              size="sm"
+              variant="outline"
+              loading={savingReservation && editReservationTarget?.id === reservation.id}
+              onClick={() => openEditReservation(reservation)}
+            >
+              Edit
+            </Button>
+          )}
           {reservation.status === ReservationStatus.CONFIRMED && (
             <Button
               size="sm"
@@ -520,6 +612,7 @@ export const StaffPanel = () => {
                         <Table.Th>Name</Table.Th>
                         <Table.Th>Email</Table.Th>
                         <Table.Th>Role</Table.Th>
+                        <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
                       </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>{customerRows}</Table.Tbody>
@@ -820,6 +913,86 @@ export const StaffPanel = () => {
             onChange={(event) => setExtraCharges(Number(event.currentTarget.value) || 0)}
           />
         </Stack>
+      </Modal>
+
+      <Modal
+        open={editingCustomer !== null}
+        onClose={() => setEditingCustomer(null)}
+        title="Edit customer"
+        footer={
+          <Group justify="flex-end">
+            <Button variant="ghost" onClick={() => setEditingCustomer(null)} disabled={savingCustomer}>
+              Cancel
+            </Button>
+            <Button onClick={saveCustomer} loading={savingCustomer}>
+              Save customer
+            </Button>
+          </Group>
+        }
+      >
+        <Stack gap="md">
+          <Group grow align="flex-start">
+            <Input
+              label="First name"
+              value={customerForm.firstName}
+              onChange={(event) => setCustomerForm({ ...customerForm, firstName: event.currentTarget.value })}
+            />
+            <Input
+              label="Last name"
+              value={customerForm.lastName}
+              onChange={(event) => setCustomerForm({ ...customerForm, lastName: event.currentTarget.value })}
+            />
+          </Group>
+          <Input
+            label="Email"
+            type="email"
+            value={customerForm.email}
+            onChange={(event) => setCustomerForm({ ...customerForm, email: event.currentTarget.value })}
+          />
+        </Stack>
+      </Modal>
+
+      <Modal
+        open={editReservationTarget !== null}
+        onClose={() => setEditReservationTarget(null)}
+        title="Edit reservation dates"
+        footer={
+          <Group justify="flex-end">
+            <Button variant="ghost" onClick={() => setEditReservationTarget(null)} disabled={savingReservation}>
+              Cancel
+            </Button>
+            <Button onClick={saveReservationDates} loading={savingReservation}>
+              Save dates
+            </Button>
+          </Group>
+        }
+      >
+        {editReservationTarget && (
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              Reservation #{editReservationTarget.id} — {editReservationTarget.vehicle.brand}{' '}
+              {editReservationTarget.vehicle.model}
+            </Text>
+            <Group grow align="flex-start">
+              <Input
+                label="Start date"
+                type="date"
+                value={reservationDates.startDate}
+                onChange={(event) =>
+                  setReservationDates({ ...reservationDates, startDate: event.currentTarget.value })
+                }
+              />
+              <Input
+                label="End date"
+                type="date"
+                value={reservationDates.endDate}
+                onChange={(event) =>
+                  setReservationDates({ ...reservationDates, endDate: event.currentTarget.value })
+                }
+              />
+            </Group>
+          </Stack>
+        )}
       </Modal>
     </Box>
   );

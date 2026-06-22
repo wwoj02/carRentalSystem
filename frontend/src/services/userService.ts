@@ -1,5 +1,5 @@
 import api from './api';
-import type { User, CreateUserRequest, LoginRequest, RegisterRequest, AuthResponse } from '../types/User';
+import type { User, CreateUserRequest, UpdateUserRequest, LoginRequest, RegisterRequest, AuthResponse } from '../types/User';
 
 export const userService = {
   async getUsers(): Promise<User[]> {
@@ -9,6 +9,11 @@ export const userService = {
 
   async createUser(user: CreateUserRequest): Promise<User> {
     const { data } = await api.post<User>('/users', user);
+    return data;
+  },
+
+  async updateUser(id: number, user: UpdateUserRequest): Promise<User> {
+    const { data } = await api.patch<User>(`/users/${id}`, user);
     return data;
   },
 

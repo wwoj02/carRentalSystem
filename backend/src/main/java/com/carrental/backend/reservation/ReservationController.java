@@ -1,5 +1,6 @@
 package com.carrental.backend.reservation;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -16,7 +17,7 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @PostMapping
-    public Reservation createReservation(@RequestBody ReservationRequest request) {
+    public Reservation createReservation(@Valid @RequestBody ReservationRequest request) {
         return reservationService.createReservation(request);
     }
 
@@ -33,6 +34,14 @@ public class ReservationController {
     @PatchMapping("/{id}/staff-cancel")
     public Reservation staffCancelReservation(@PathVariable Integer id) {
         return reservationService.staffCancelReservation(id);
+    }
+
+    @PatchMapping("/{id}")
+    public Reservation updateReservation(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateReservationRequest request
+    ) {
+        return reservationService.updateReservation(id, request);
     }
 
     @PatchMapping("/{id}/pickup")

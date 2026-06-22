@@ -9,3 +9,5 @@ backend/src/main/resources/application.properties
 
 .env
 *.log
+
+backend/data/

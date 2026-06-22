@@ -1,5 +1,6 @@
 package com.carrental.backend.user;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,5 +20,10 @@ public class UserController {
     @PostMapping
     public User createUser(@RequestBody User user) {
         return userService.createUser(user);
+    }
+
+    @PatchMapping("/{id}")
+    public User updateUser(@PathVariable Integer id, @Valid @RequestBody UpdateUserRequest request) {
+        return userService.updateUser(id, request);
     }
 }

@@ -2,6 +2,7 @@ import { Stack, Group, Text, Title, Badge, Image, Box, Divider } from '@mantine/
 import { Modal, Spinner, Button } from '../common';
 import { useVehicle } from '../../hooks/useVehicles';
 import type { Vehicle } from '../../types/Vehicle';
+import { formatCurrency } from '../../utils/dateUtils';
 
 interface VehicleDetailsModalProps {
   vehicleId: number | null;
@@ -60,7 +61,7 @@ export const VehicleDetailsModal = ({ vehicleId, onClose, onReserve }: VehicleDe
                 price per day:
               </Text>
               <Text size="xl" fw={700}>
-                $ {vehicle.pricePerDay}
+                {formatCurrency(vehicle.pricePerDay)}
               </Text>
             </Group>
             <Button

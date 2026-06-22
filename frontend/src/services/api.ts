@@ -4,6 +4,12 @@ import type { AxiosInstance } from 'axios';
 // Use environment variable or default to localhost:8080
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
+export const getApiErrorMessage = (error: unknown): string | undefined => {
+  if (!axios.isAxiosError(error)) return undefined;
+  const message = error.response?.data?.message;
+  return typeof message === 'string' ? message : undefined;
+};
+
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -28,6 +34,10 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/';
+    }
+    const message = getApiErrorMessage(error);
+    if (message) {
+      error.message = message;
     }
     return Promise.reject(error);
   }

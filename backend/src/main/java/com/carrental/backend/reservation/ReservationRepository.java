@@ -26,6 +26,23 @@ public interface ReservationRepository
     );
 
     @Query("""
+    SELECT COUNT(r) > 0
+    FROM Reservation r
+    WHERE r.vehicle.id = :vehicleId
+    AND r.id <> :excludeReservationId
+    AND r.status IN :blockingStatuses
+    AND r.startDate < :endDate
+    AND r.endDate > :startDate
+    """)
+    boolean existsOverlappingReservationExcluding(
+            Integer vehicleId,
+            LocalDate startDate,
+            LocalDate endDate,
+            Integer excludeReservationId,
+            List<ReservationStatus> blockingStatuses
+    );
+
+    @Query("""
     SELECT COALESCE(SUM(r.totalPrice), 0)
     FROM Reservation r
     WHERE r.status = 'COMPLETED'

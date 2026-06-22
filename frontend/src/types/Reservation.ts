@@ -39,6 +39,11 @@ export type ProcessReturnRequest = {
   extraCharges?: number;
 };
 
+export type UpdateReservationDatesRequest = {
+  startDate: string;
+  endDate: string;
+};
+
 export type CreateReservationRequest = {
   userId: number;
   vehicleId: number;
