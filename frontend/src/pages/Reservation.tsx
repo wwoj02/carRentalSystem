@@ -24,7 +24,6 @@ import { Button, Input, Modal, Spinner } from '../components/common';
 import { formatCurrency, calculateDays } from '../utils/dateUtils';
 
 const INSURANCE = { none: 0, regular: 15, premium: 30 } as const;
-const GPS_PER_DAY = 5;
 const YOUNG_DRIVER_FEE = 25;
 
 type Insurance = keyof typeof INSURANCE;
@@ -74,7 +73,6 @@ export const Reservation = () => {
   const [startDate, setStartDate] = useState(todayPlus(1));
   const [endDate, setEndDate] = useState(todayPlus(4));
   const [insurance, setInsurance] = useState<Insurance>('regular');
-  const [gps, setGps] = useState(false);
   const [youngDriver, setYoungDriver] = useState(false);
 
   const [step, setStep] = useState<Step>('form');
@@ -96,10 +94,9 @@ export const Reservation = () => {
     if (!vehicle) return null;
     const base = days * vehicle.pricePerDay;
     const ins = days * INSURANCE[insurance];
-    const gpsCost = gps ? days * GPS_PER_DAY : 0;
     const young = youngDriver ? YOUNG_DRIVER_FEE : 0;
-    return { base, ins, gpsCost, young, total: base + ins + gpsCost + young };
-  }, [vehicle, days, insurance, gps, youngDriver]);
+    return { base, ins, young, total: base + ins + young };
+  }, [vehicle, days, insurance, youngDriver]);
 
   const canSubmit =
     !!currentUser &&
@@ -128,7 +125,6 @@ export const Reservation = () => {
         customerPhone: details.phone,
         drivingLicenceId: details.licence,
         insuranceType: insurance,
-        gpsIncluded: gps,
         youngDriver,
       });
       setReservationId(reservation.id);
@@ -279,8 +275,8 @@ export const Reservation = () => {
               )}
             </Block>
 
-            {/* 2. Insurance & add-ons */}
-            <Block title="Insurance & add-ons">
+            {/* 2. Insurance & fees */}
+            <Block title="Insurance & fees">
               <Stack gap="md">
                 <Radio.Group
                   label="Insurance"
@@ -305,16 +301,6 @@ export const Reservation = () => {
                   </Group>
                 </Radio.Group>
                 <Checkbox
-                  checked={gps}
-                  onChange={(e) => setGps(e.currentTarget.checked)}
-                  disabled={locked}
-                  label={
-                    <Text size="sm" c="gray.1">
-                      GPS navigation (+{formatCurrency(GPS_PER_DAY)}/day)
-                    </Text>
-                  }
-                />
-                <Checkbox
                   checked={youngDriver}
                   onChange={(e) => setYoungDriver(e.currentTarget.checked)}
                   disabled={locked}
@@ -336,7 +322,6 @@ export const Reservation = () => {
                     value={formatCurrency(breakdown.base)}
                   />
                   {breakdown.ins > 0 && <Row label={`${insurance} insurance`} value={formatCurrency(breakdown.ins)} />}
-                  {breakdown.gpsCost > 0 && <Row label="GPS navigation" value={formatCurrency(breakdown.gpsCost)} />}
                   {breakdown.young > 0 && <Row label="Young driver fee" value={formatCurrency(breakdown.young)} />}
                   <Divider color="dark.3" my={4} />
                   <Group justify="space-between">

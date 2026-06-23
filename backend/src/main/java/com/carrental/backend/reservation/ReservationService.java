@@ -27,7 +27,6 @@ public class ReservationService {
 
     private static final double REGULAR_INSURANCE_PER_DAY = 15.0;
     private static final double PREMIUM_INSURANCE_PER_DAY = 30.0;
-    private static final double GPS_PER_DAY = 5.0;
     private static final double YOUNG_DRIVER_FEE = 25.0;
 
     public Reservation createReservation(ReservationRequest request) {
@@ -103,7 +102,6 @@ public class ReservationService {
         reservation.setCustomerPhone(request.getCustomerPhone());
         reservation.setDrivingLicenceId(request.getDrivingLicenceId());
         reservation.setInsuranceType(normalizeInsuranceType(request.getInsuranceType()));
-        reservation.setGpsIncluded(request.isGpsIncluded());
         reservation.setYoungDriver(request.isYoungDriver());
         reservation.setStatus(ReservationStatus.PENDING_PAYMENT);
 
@@ -219,6 +217,7 @@ public class ReservationService {
                         ? null
                         : request.getPickupNotes().trim()
         );
+        activateGpsTracking(reservation);
 
         Vehicle vehicle = reservation.getVehicle();
         if (vehicle.isAvailable()) {
@@ -241,6 +240,7 @@ public class ReservationService {
         }
 
         reservation.setStatus(ReservationStatus.COMPLETED);
+        deactivateGpsTracking(reservation);
         if (request != null) {
             reservation.setReturnNotes(
                     request.getReturnNotes() == null ? null : request.getReturnNotes().trim()
@@ -316,8 +316,10 @@ public class ReservationService {
 
                 Options:
                 Insurance: %s
-                GPS navigation: %s
                 Young driver: %s
+
+                GPS tracking (simulated external provider):
+                %s
 
                 Pickup notes:
                 %s
@@ -348,8 +350,8 @@ public class ReservationService {
                 reservation.getStartDate(),
                 reservation.getEndDate(),
                 blankToDash(reservation.getInsuranceType()),
-                yesNo(reservation.isGpsIncluded()),
                 yesNo(reservation.isYoungDriver()),
+                gpsTrackingStatus(reservation),
                 blankToDash(reservation.getPickupNotes()),
                 blankToDash(reservation.getReturnNotes()),
                 blankToDash(reservation.getDamageNotes()),
@@ -361,7 +363,6 @@ public class ReservationService {
     private ReservationRequest toPriceRequest(Reservation reservation) {
         ReservationRequest request = new ReservationRequest();
         request.setInsuranceType(reservation.getInsuranceType());
-        request.setGpsIncluded(reservation.isGpsIncluded());
         request.setYoungDriver(reservation.isYoungDriver());
         return request;
     }
@@ -369,13 +370,28 @@ public class ReservationService {
     private double calculateTotalPrice(ReservationRequest request, Vehicle vehicle, long days) {
         double total = days * vehicle.getPricePerDay();
         total += days * insurancePricePerDay(normalizeInsuranceType(request.getInsuranceType()));
-        if (request.isGpsIncluded()) {
-            total += days * GPS_PER_DAY;
-        }
         if (request.isYoungDriver()) {
             total += YOUNG_DRIVER_FEE;
         }
         return total;
+    }
+
+    private void activateGpsTracking(Reservation reservation) {
+        reservation.setGpsTrackingActive(true);
+    }
+
+    private void deactivateGpsTracking(Reservation reservation) {
+        reservation.setGpsTrackingActive(false);
+    }
+
+    private String gpsTrackingStatus(Reservation reservation) {
+        if (reservation.isGpsTrackingActive()) {
+            return "Active during rental (mock GPS provider)";
+        }
+        if (reservation.getStatus() == ReservationStatus.COMPLETED) {
+            return "Deactivated on return (mock GPS provider)";
+        }
+        return "Not active yet (starts at vehicle pickup)";
     }
 
     private double insurancePricePerDay(String insuranceType) {

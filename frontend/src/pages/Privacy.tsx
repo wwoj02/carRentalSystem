@@ -26,7 +26,8 @@ export const Privacy = () => (
               <List.Item>Account details: name, email address, and password (stored securely hashed).</List.Item>
               <List.Item>
                 Reservation details: phone number, driving licence ID, rental dates, vehicle choice, and optional
-                extras (insurance, GPS, young driver).
+                extras (insurance, young driver). Vehicle location may be tracked via a simulated GPS
+                integration during active rentals.
               </List.Item>
               <List.Item>Payment-related records linked to your reservations.</List.Item>
               <List.Item>Staff notes recorded at vehicle pickup or return (e.g. condition, damage).</List.Item>

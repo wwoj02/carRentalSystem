@@ -471,9 +471,16 @@ export const StaffPanel = () => {
         </Text>
       </Table.Td>
       <Table.Td>
-        <Badge color={STATUS_COLOR[reservation.status] ?? 'gray'}>
-          {RESERVATION_STATUS_LABELS[reservation.status] ?? reservation.status}
-        </Badge>
+        <Stack gap={4}>
+          <Badge color={STATUS_COLOR[reservation.status] ?? 'gray'}>
+            {RESERVATION_STATUS_LABELS[reservation.status] ?? reservation.status}
+          </Badge>
+          {reservation.gpsTrackingActive && (
+            <Badge color="teal" variant="light">
+              GPS tracking (mock)
+            </Badge>
+          )}
+        </Stack>
       </Table.Td>
       <Table.Td>
         <Text size="sm" fw={600}>

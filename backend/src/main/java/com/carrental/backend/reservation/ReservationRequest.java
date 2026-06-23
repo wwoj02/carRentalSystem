@@ -22,6 +22,5 @@ public class ReservationRequest {
     private String customerPhone;
     private String drivingLicenceId;
     private String insuranceType;
-    private boolean gpsIncluded;
     private boolean youngDriver;
 }

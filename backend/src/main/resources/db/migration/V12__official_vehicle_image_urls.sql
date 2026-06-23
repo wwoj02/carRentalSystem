@@ -1,0 +1,4 @@
+update vehicles set image_url = 'https://www.toyotanews.eu/pl/grafika-artykulu/4160-item-toyota-corolla-z-roku-modelowego-2026-z-nowymi-efektownymi-lakierami-i-wzorami-tapicerki-wnetrza.jpg?featured=1&rsize=com_rrrcontent.popup_slider&filename=2026corollatsnewmattefinishMattegrey.jpg' where brand = 'Toyota' and model = 'Corolla';
+update vehicles set image_url = 'https://mediapool.bmwgroup.com/cache/P9/202301/P90492262/P90492262-the-new-bmw-x5-xdrive50e-04-23-600px.jpg' where brand = 'BMW' and model = 'X5';
+update vehicles set image_url = 'https://autospot.com.pl/panel/uploads_uzywane/780/Audi%20A4%2003.12.24%20profilowe.jpg' where brand = 'Audi' and model = 'A4';
+update vehicles set image_url = 'https://www.kia.com/content/dam/kwcms/kme/global/en/assets/vehicles/kia-sportage-nq5-my22/discover/kia-sportage-hev-gtl-my22-actionpanel-get-yours.jpg' where brand = 'Kia' and model = 'Sportage';

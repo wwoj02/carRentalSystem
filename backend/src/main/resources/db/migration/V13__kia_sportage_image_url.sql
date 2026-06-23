@@ -1,0 +1,1 @@
+update vehicles set image_url = 'https://www.kia.com/content/dam/kwcms/kme/global/en/assets/vehicles/kia-sportage-nq5-my22/discover/kia-sportage-ice-gls-my22-elp-gallery.jpg' where brand = 'Kia' and model = 'Sportage';

@@ -10,7 +10,7 @@ import { FilterSidebar } from '../components/vehicles/FilterSidebar';
 import type { CatalogFilters, CatalogSort } from '../components/vehicles/FilterSidebar';
 import { Button, Spinner } from '../components/common';
 import { formatCurrency } from '../utils/dateUtils';
-import heroImage from '../assets/hero.png';
+import heroImage from '../assets/hero.jpg';
 
 const uniqueSorted = (values: string[]) => [...new Set(values.filter(Boolean))].sort();
 
@@ -25,7 +25,7 @@ const FAQ_TABS = [
       },
       {
         question: 'Can I choose extra options?',
-        answer: 'During reservation you can add optional insurance and GPS before confirming the booking.',
+        answer: 'During reservation you can add optional insurance before confirming the booking. GPS vehicle tracking is handled automatically by the rental company during active rentals (simulated integration).',
       },
     ],
   },
@@ -233,21 +233,17 @@ export const Home = () => {
                 style={{
                   position: 'relative',
                   minHeight: 360,
-                  display: 'grid',
-                  alignItems: 'center',
-                  justifyItems: 'center',
                   overflow: 'hidden',
-                  borderRadius: 8,
-                  background: 'linear-gradient(135deg, #111827 0%, #374151 45%, #e5e7eb 45%, #f8fafc 100%)',
+                  borderRadius: 16,
+                  boxShadow: '0 24px 48px rgba(15, 23, 42, 0.18)',
                 }}
               >
                 <Image
                   src={heroImage}
-                  alt="Modern rental car"
-                  fit="contain"
-                  mah={360}
-                  maw="85%"
-                  style={{ filter: 'drop-shadow(0 28px 36px rgba(15, 23, 42, 0.35))' }}
+                  alt="Audi rental car"
+                  h={360}
+                  fit="cover"
+                  radius="md"
                 />
               </Box>
             </Grid.Col>

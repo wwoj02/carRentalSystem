@@ -33,7 +33,8 @@ public class Reservation {
     private String customerPhone;
     private String drivingLicenceId;
     private String insuranceType;
-    private boolean gpsIncluded;
+    @Column(name = "gps_included")
+    private boolean gpsTrackingActive;
     private boolean youngDriver;
 
     @Column(length = 1000)

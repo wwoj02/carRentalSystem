@@ -21,7 +21,7 @@ export type Reservation = {
   customerPhone?: string;
   drivingLicenceId?: string;
   insuranceType?: 'none' | 'regular' | 'premium';
-  gpsIncluded: boolean;
+  gpsTrackingActive: boolean;
   youngDriver: boolean;
   pickupNotes?: string;
   returnNotes?: string;
@@ -54,6 +54,5 @@ export type CreateReservationRequest = {
   customerPhone: string;
   drivingLicenceId: string;
   insuranceType: 'none' | 'regular' | 'premium';
-  gpsIncluded: boolean;
   youngDriver: boolean;
 };
