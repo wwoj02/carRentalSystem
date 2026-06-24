@@ -52,5 +52,4 @@ Password for all: `password`
 ## Notes
 
 - Payment and GPS are **simulated** (academic project).
-- Project docs are in `stages/`.
 - Backend tests: `cd backend && ./mvnw test`
